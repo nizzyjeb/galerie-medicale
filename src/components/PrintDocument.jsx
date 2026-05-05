@@ -153,7 +153,7 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
             <div>Gallerie Océane, Libreville, Gabon</div>
             <div>Tél. : (00241) 60202900</div>
             <div>Email : acceuil@sajgroupe.com</div>
-            <div>NIF : 49761L | RCCM : GA-MBV-01-2020-B12-00179</div>
+            <div>NIF : 49761L | RCCM : GA-LBV-01-2020-B12-00179</div>
           </div>
         </div>
         {/* Client */}
@@ -310,7 +310,7 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
       <div style={{ height:4, background:TEAL, borderRadius:2, margin:'8px 0 5px' }} />
       <div style={{ fontSize:9, color:GRAY, textAlign:'center', lineHeight:1.6 }}>
         Société à Responsabilité Limitée au Capital de 10 000 000 FCFA &nbsp;|&nbsp;
-        NIF : 49761L &nbsp;|&nbsp; RCCM : GA-MBV-01-2020-B12-00179
+        NIF : 49761L &nbsp;|&nbsp; RCCM : GA-LBV-01-2020-B12-00179
         <br/>
         ✆ (00241) 60202900 &nbsp;|&nbsp; ✉ acceuil@sajgroupe.com &nbsp;|&nbsp; 🌐 www.sajgroupe.com
       </div>

@@ -8,6 +8,7 @@ import ProForma from './pages/ProForma'
 import BonsLivraison from './pages/BonsLivraison'
 import Produits from './pages/Produits'
 import Utilisateurs from './pages/Utilisateurs'
+import Parametres from './pages/Parametres'
 
 function ProtectedRoute({ children, adminOnly = false, comptableOnly = false }) {
   const { user, profile, loading } = useAuth()
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="livraison" element={<BonsLivraison />} />
         <Route path="produits" element={<ProtectedRoute comptableOnly><Produits /></ProtectedRoute>} />
         <Route path="utilisateurs" element={<ProtectedRoute adminOnly><Utilisateurs /></ProtectedRoute>} />
+        <Route path="parametres" element={<ProtectedRoute adminOnly><Parametres /></ProtectedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import LOGO_BASE64 from '../lib/logo.js'
 import { supabase } from '../lib/supabase'
 import { fmtDate, today, STATUTS_BL } from '../lib/utils'
 import toast from 'react-hot-toast'
@@ -43,12 +44,12 @@ function PrintBL({ bl, onClose }) {
 
           {/* En-tête */}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
-            <img src="/logo.png" alt="Galerie Médicale" style={{ height:70, objectFit:'contain' }} />
+            <img src={LOGO_BASE64} alt="Galerie Médicale" style={{ height:70, objectFit:'contain' }} />
             <div style={{ textAlign:'right', fontSize:11, color:'#6D6D6D', lineHeight:1.7 }}>
               <div>Gallerie Océane, Libreville, Gabon</div>
               <div>Tél. : (00241) 60202900</div>
               <div>acceuil@sajgroupe.com</div>
-              <div>NIF : 49761L | RCCM : GA-MBV-01-2020-B12-00179</div>
+              <div>NIF : 49761L | RCCM : GA-LBV-01-2020-B12-00179</div>
             </div>
           </div>
 
@@ -158,7 +159,7 @@ function PrintBL({ bl, onClose }) {
 
           <div style={{ height:3, background:'#1A9E8F', borderRadius:2, margin:'16px 0 10px' }} />
           <div style={{ fontSize:10, color:'#6D6D6D', textAlign:'center' }}>
-            ✆ (00241) 60202900  |  ✉ acceuil@sajgroupe.com  |  🌐 www.sajgroupe.com  |  NIF : 49761L  |  RCCM : GA-MBV-01-2020-B12-00179
+            ✆ (00241) 60202900  |  ✉ acceuil@sajgroupe.com  |  🌐 www.sajgroupe.com  |  NIF : 49761L  |  RCCM : GA-LBV-01-2020-B12-00179
           </div>
         </div>
       </div>

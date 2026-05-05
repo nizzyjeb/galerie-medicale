@@ -1,3 +1,4 @@
+import LOGO_BASE64 from '../lib/logo.js'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.jsx'
 import toast from 'react-hot-toast'
@@ -13,6 +14,7 @@ const navItems = [
   { to: '/produits', label: 'Base produits', icon: 'package', roles: ['admin','comptable'] },
   { section: 'Administration' },
   { to: '/utilisateurs', label: 'Utilisateurs', icon: 'users', roles: ['admin'] },
+  { to: '/parametres', label: 'Paramètres', icon: 'settings', roles: ['admin'] },
 ]
 
 const Icon = ({ name }) => {
@@ -23,6 +25,7 @@ const Icon = ({ name }) => {
     truck: <><path d="M1 11V5l4-4h6l4 4v6"/><path d="M1 11h14"/><circle cx="4.5" cy="13" r="1.5"/><circle cx="11.5" cy="13" r="1.5"/></>,
     package: <><path d="M8 1l7 4v6l-7 4-7-4V5z"/><path d="M8 1v14M1 5l7 4 7-4"/></>,
     users: <><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2-5 5-5s5 2 5 5"/><circle cx="13" cy="7" r="2"/><path d="M11 14c0-2 .9-3 2-3"/></>,
+    settings: <><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3"/></>,
   }
   return <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">{icons[name]}</svg>
 }
@@ -44,7 +47,7 @@ export default function Layout() {
       <aside className="sidebar">
         {/* Logo dans la sidebar */}
         <div style={{ padding: '16px 18px 14px', borderBottom: '1px solid rgba(255,255,255,.08)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/logo.png" alt="Galerie Médicale" style={{ width: 42, height: 42, objectFit: 'contain', borderRadius: 6, background: '#fff', padding: 3 }} />
+          <img src={LOGO_BASE64} alt="Galerie Médicale" style={{ width: 42, height: 42, objectFit: 'contain', borderRadius: 6, background: '#fff', padding: 3 }} />
           <div>
             <div style={{ fontSize: 12, fontWeight: 600, color: '#fff', letterSpacing: '.3px', lineHeight: 1.3 }}>Galerie Médicale</div>
             <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 1 }}>SAJ Groupe · Libreville</div>
@@ -102,7 +105,7 @@ export default function Layout() {
       <div className="main-content">
         <header className="topbar">
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <img src="/logo.png" alt="GM" style={{ width:28, height:28, objectFit:'contain' }} />
+            <img src={LOGO_BASE64} alt="GM" style={{ width:28, height:28, objectFit:'contain' }} />
             <div style={{ fontSize:15, fontWeight:600 }}>Galerie Médicale</div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
