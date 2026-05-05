@@ -18,6 +18,7 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
   const ttc = doc.total_ttc || 0
   const [commercialTel, setCommercialTel] = useState('')
   const [commercialEmail, setCommercialEmail] = useState('')
+  const [unites, setUnites] = useState({})
   const isProforma = type === 'proforma'
   const titre = isProforma ? 'FACTURE PRO FORMA' : 'FACTURE'
   const numero = doc.numero || '—'
@@ -33,7 +34,9 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
           #print-root { display: block !important; position: fixed !important;
             inset: 0 !important; background: white !important; overflow: visible !important; }
           .no-print { display: none !important; }
+          .print-only { display: none; }
           /* Supprimer URL et en-têtes du navigateur */
+          @media print { .print-only { display: inline !important; } .no-print { display: none !important; } }
           @page {
             size: A4 portrait;
             margin: 10mm 12mm 10mm 12mm;
@@ -95,6 +98,7 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
             remise={remise} base={base} tva={tva} css={css} ttc={ttc}
             isProforma={isProforma} titre={titre} numero={numero}
             commercialTel={commercialTel} commercialEmail={commercialEmail}
+            unites={unites} setUnites={setUnites}
           />
         </div>
       </div>
@@ -102,7 +106,7 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
   )
 }
 
-function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva, css, ttc, isProforma, titre, numero, commercialTel, commercialEmail }) {
+function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva, css, ttc, isProforma, titre, numero, commercialTel, commercialEmail, unites, setUnites }) {
   const TEAL = '#1A9E8F'
   const TEAL_L = '#E8F6F5'
   const TEAL_M = '#B2DED9'
@@ -231,7 +235,29 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
               <td style={{ padding:'5px 8px', fontSize:10, textAlign:'center', borderBottom:'1px solid #e5e7eb', color:GRAY }}>{i+1}</td>
               <td style={{ padding:'5px 8px', fontSize:10, borderBottom:'1px solid #e5e7eb' }}>{l?.designation || ''}</td>
               <td style={{ padding:'5px 8px', fontSize:10, textAlign:'center', borderBottom:'1px solid #e5e7eb' }}>{l?.quantite || ''}</td>
-              <td style={{ padding:'5px 8px', fontSize:10, textAlign:'center', fontStyle:'italic', color:GRAY, borderBottom:'1px solid #e5e7eb' }}>Forfait</td>
+              <td style={{ padding:'5px 8px', fontSize:10, textAlign:'center', borderBottom:'1px solid #e5e7eb' }}>
+                {l ? (
+                  <>
+                    <select
+                      className="no-print"
+                      value={unites[i] || 'Pièce'}
+                      onChange={e => setUnites && setUnites(prev => ({ ...prev, [i]: e.target.value }))}
+                      style={{ fontSize:10, border:'1px solid #ccc', borderRadius:4, padding:'1px 4px',
+                        background:'#fff', cursor:'pointer', fontFamily:'Arial,sans-serif', width:70 }}
+                    >
+                      <option>Pièce</option>
+                      <option>Boîte</option>
+                      <option>Carton</option>
+                      <option>Forfait</option>
+                      <option>Séance</option>
+                      <option>Flacon</option>
+                    </select>
+                    <span className="print-only" style={{ fontStyle:'italic', color:GRAY }}>{unites[i] || 'Pièce'}</span>
+                  </>
+                ) : (
+                  <span style={{ fontStyle:'italic', color:GRAY }}>—</span>
+                )}
+              </td>
               <td style={{ padding:'5px 8px', fontSize:10, textAlign:'right', fontFamily:'monospace', borderBottom:'1px solid #e5e7eb' }}>
                 {l ? fmt(l.prix_unitaire) : ''}
               </td>
