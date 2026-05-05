@@ -1,3 +1,4 @@
+import LOGO_BASE64 from '../lib/logo.js'
 import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth.jsx'
 import toast from 'react-hot-toast'
@@ -23,7 +24,7 @@ export default function Login() {
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#f0f4f3', fontFamily:'var(--font)', padding:20 }}>
       <div style={{ width:'100%', maxWidth:400 }}>
         <div style={{ textAlign:'center', marginBottom:32 }}>
-          <img src="/logo.png" alt="Galerie Médicale" style={{ width:100, height:100, objectFit:'contain', marginBottom:12 }} />
+          <img src={LOGO_BASE64} alt="Galerie Médicale" style={{ width:140, height:140, objectFit:'contain', marginBottom:12 }} />
           <h1 style={{ fontSize:22, fontWeight:600, color:'var(--text)', marginBottom:4 }}>Galerie Médicale</h1>
           <p style={{ color:'var(--gray)', fontSize:14 }}>SAJ Groupe · Libreville, Gabon</p>
         </div>

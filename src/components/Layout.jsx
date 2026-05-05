@@ -47,7 +47,7 @@ export default function Layout() {
       <aside className="sidebar">
         {/* Logo dans la sidebar */}
         <div style={{ padding: '16px 18px 14px', borderBottom: '1px solid rgba(255,255,255,.08)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src={LOGO_BASE64} alt="Galerie Médicale" style={{ width: 42, height: 42, objectFit: 'contain', borderRadius: 6, background: '#fff', padding: 3 }} />
+          <img src={LOGO_BASE64} alt="Galerie Médicale" style={{ width: 54, height: 54, objectFit: 'contain', borderRadius: 6, background: '#fff', padding: 3 }} />
           <div>
             <div style={{ fontSize: 12, fontWeight: 600, color: '#fff', letterSpacing: '.3px', lineHeight: 1.3 }}>Galerie Médicale</div>
             <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 1 }}>SAJ Groupe · Libreville</div>
@@ -105,7 +105,7 @@ export default function Layout() {
       <div className="main-content">
         <header className="topbar">
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <img src={LOGO_BASE64} alt="GM" style={{ width:28, height:28, objectFit:'contain' }} />
+            <img src={LOGO_BASE64} alt="GM" style={{ width:36, height:36, objectFit:'contain' }} />
             <div style={{ fontSize:15, fontWeight:600 }}>Galerie Médicale</div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
