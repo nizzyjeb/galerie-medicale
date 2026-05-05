@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../hooks/useAuth.jsx'
 import toast from 'react-hot-toast'
 
 export default function Login() {
@@ -23,8 +23,8 @@ export default function Login() {
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#f0f4f3', fontFamily:'var(--font)', padding:20 }}>
       <div style={{ width:'100%', maxWidth:400 }}>
         <div style={{ textAlign:'center', marginBottom:32 }}>
-          <div style={{ width:56, height:56, borderRadius:14, background:'var(--teal)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', fontSize:22, color:'#fff', fontWeight:700 }}>GM</div>
-          <h1 style={{ fontSize:22, fontWeight:600, color:'var(--text)', marginBottom:6 }}>Galerie Médicale</h1>
+          <img src="/logo.png" alt="Galerie Médicale" style={{ width:100, height:100, objectFit:'contain', marginBottom:12 }} />
+          <h1 style={{ fontSize:22, fontWeight:600, color:'var(--text)', marginBottom:4 }}>Galerie Médicale</h1>
           <p style={{ color:'var(--gray)', fontSize:14 }}>SAJ Groupe · Libreville, Gabon</p>
         </div>
 
@@ -42,7 +42,9 @@ export default function Login() {
                   <input type="password" placeholder="••••••••" value={password}
                     onChange={e => setPassword(e.target.value)} />
                 </div>
-                <button type="submit" className="btn btn-primary" style={{ width:'100%', justifyContent:'center', padding:'10px', marginTop:4 }} disabled={loading}>
+                <button type="submit" className="btn btn-primary"
+                  style={{ width:'100%', justifyContent:'center', padding:'10px', marginTop:4, background:'var(--teal)' }}
+                  disabled={loading}>
                   {loading ? 'Connexion...' : 'Se connecter'}
                 </button>
               </div>

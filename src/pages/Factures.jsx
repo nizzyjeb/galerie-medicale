@@ -52,8 +52,7 @@ function PrintModal({ doc, onClose }) {
         <div id="print-zone" style={{ padding: '36px 48px', fontFamily: 'Arial, sans-serif', fontSize: 13, color: '#2C2C2C' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
             <div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: '#1A9E8F' }}>GALERIE MÉDICALE</div>
-              <div style={{ fontSize: 11, color: '#6D6D6D', marginTop: 2 }}>BY SAJ GROUPE</div>
+              <img src="/logo.png" alt="Galerie Médicale" style={{ height: 70, objectFit: "contain" }} />
             </div>
             <div style={{ textAlign: 'right', fontSize: 11, color: '#6D6D6D', lineHeight: 1.7 }}>
               <div>Gallerie Océane, Libreville, Gabon</div>

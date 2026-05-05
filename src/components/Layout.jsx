@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../hooks/useAuth.jsx'
 import toast from 'react-hot-toast'
 
 const navItems = [
@@ -42,12 +42,16 @@ export default function Layout() {
   return (
     <div className="app-layout">
       <aside className="sidebar">
-        <div style={{ padding: '20px 18px 14px', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', letterSpacing: '.3px' }}>Galerie Médicale</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>SAJ Groupe · Libreville</div>
-          {profile?.role === 'admin' && (
-            <div style={{ display:'inline-block', background:'var(--teal)', color:'#fff', fontSize:9, padding:'2px 7px', borderRadius:10, marginTop:6, letterSpacing:.5, fontWeight:600 }}>ADMIN</div>
-          )}
+        {/* Logo dans la sidebar */}
+        <div style={{ padding: '16px 18px 14px', borderBottom: '1px solid rgba(255,255,255,.08)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src="/logo.png" alt="Galerie Médicale" style={{ width: 42, height: 42, objectFit: 'contain', borderRadius: 6, background: '#fff', padding: 3 }} />
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#fff', letterSpacing: '.3px', lineHeight: 1.3 }}>Galerie Médicale</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 1 }}>SAJ Groupe · Libreville</div>
+            {profile?.role === 'admin' && (
+              <div style={{ display:'inline-block', background:'var(--teal)', color:'#fff', fontSize:9, padding:'1px 6px', borderRadius:8, marginTop:3, letterSpacing:.5, fontWeight:600 }}>ADMIN</div>
+            )}
+          </div>
         </div>
 
         <nav style={{ padding: '10px 0', flex: 1 }}>
@@ -86,7 +90,8 @@ export default function Layout() {
               <div style={{ fontSize:10, color:'rgba(255,255,255,.4)' }}>{profile?.role}</div>
             </div>
           </div>
-          <button onClick={handleSignOut} style={{ width:'100%', background:'rgba(255,255,255,.06)', border:'none', borderRadius:7, padding:'7px 10px', color:'rgba(255,255,255,.6)', fontSize:12, cursor:'pointer', textAlign:'left', transition:'background .15s' }}
+          <button onClick={handleSignOut}
+            style={{ width:'100%', background:'rgba(255,255,255,.06)', border:'none', borderRadius:7, padding:'7px 10px', color:'rgba(255,255,255,.6)', fontSize:12, cursor:'pointer', textAlign:'left' }}
             onMouseEnter={e => e.target.style.background='rgba(255,255,255,.1)'}
             onMouseLeave={e => e.target.style.background='rgba(255,255,255,.06)'}>
             Se déconnecter
@@ -96,7 +101,10 @@ export default function Layout() {
 
       <div className="main-content">
         <header className="topbar">
-          <div style={{ fontSize:15, fontWeight:600 }} id="page-title">Galerie Médicale</div>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <img src="/logo.png" alt="GM" style={{ width:28, height:28, objectFit:'contain' }} />
+            <div style={{ fontSize:15, fontWeight:600 }}>Galerie Médicale</div>
+          </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <span style={{ fontSize:12, color:'var(--gray)' }}>
               {new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}
