@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { fmt, fmtDate, STATUTS_FACTURE } from '../lib/utils'
 import FactureModal from '../components/FactureModal'
+import EditFactureModal from '../components/EditFactureModal'
 import toast from 'react-hot-toast'
 
 function PrintModal({ doc, onClose }) {
@@ -186,6 +187,7 @@ export default function Factures() {
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [previewDoc, setPreviewDoc] = useState(null)
+  const [editDoc, setEditDoc] = useState(null)
 
   useEffect(() => { fetchFactures() }, [])
 
@@ -251,6 +253,7 @@ export default function Factures() {
                     <td>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         <button className="btn btn-ghost btn-sm" onClick={() => openPreview(f)}>👁 Aperçu</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setEditDoc(f)}>✏️ Modifier</button>
                         <select style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }}
                           value={f.statut} onChange={e => changeStatut(f.id, e.target.value)}>
                           <option value="attente">En attente</option>
@@ -268,6 +271,7 @@ export default function Factures() {
       </div>
 
       {showModal && <FactureModal type="facture" onClose={() => setShowModal(false)} onSaved={fetchFactures} />}
+      {editDoc && <EditFactureModal doc={editDoc} onClose={() => setEditDoc(null)} onSaved={fetchFactures} />}
       {previewDoc && <PrintModal doc={previewDoc} onClose={() => setPreviewDoc(null)} />}
     </div>
   )

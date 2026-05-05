@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { fmt, fmtDate, today, addDays, STATUTS_FACTURE } from '../lib/utils'
 import FactureModal from '../components/FactureModal'
+import EditFactureModal from '../components/EditFactureModal'
 import toast from 'react-hot-toast'
 
 function PrintModal({ doc, onClose }) {
@@ -230,6 +231,7 @@ export default function ProForma() {
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [previewDoc, setPreviewDoc] = useState(null)
+  const [editDoc, setEditDoc] = useState(null)
 
   useEffect(() => { fetchPF() }, [])
 
@@ -300,6 +302,7 @@ export default function ProForma() {
                     <td><span className="badge" style={{ background: st.bg, color: st.color }}>{st.label}</span></td>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setEditDoc(p)}>✏️ Modifier</button>
                         <button className="btn btn-ghost btn-sm" onClick={() => openPreview(p)}>
                           👁 Aperçu
                         </button>
@@ -316,6 +319,7 @@ export default function ProForma() {
         </div>
       </div>
 
+      {editDoc && <EditFactureModal doc={editDoc} onClose={() => setEditDoc(null)} onSaved={fetchPF} />}
       {showModal && <FactureModal type="proforma" onClose={() => setShowModal(false)} onSaved={fetchPF} />}
       {previewDoc && <PrintModal doc={previewDoc} onClose={() => setPreviewDoc(null)} />}
     </div>
