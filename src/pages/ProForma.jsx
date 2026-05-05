@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { fmt, fmtDate, today, addDays, STATUTS_FACTURE } from '../lib/utils'
 import FactureModal from '../components/FactureModal'
+import { exportFacturesExcel } from '../lib/exportExcel'
 import EditFactureModal from '../components/EditFactureModal'
 import toast from 'react-hot-toast'
 
@@ -271,7 +272,12 @@ export default function ProForma() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h1 style={{ fontSize: 18, fontWeight: 600 }}>Pro Forma</h1>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Nouvelle pro forma</button>
+        <div style={{ display:'flex', gap:8 }}>
+          <button className="btn btn-ghost" onClick={() => exportFacturesExcel(proformas, 'proforma')} title="Exporter les pro formas">
+            📥 Export Excel
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Nouvelle pro forma</button>
+        </div>
       </div>
 
       <div className="alert alert-info mb-4">

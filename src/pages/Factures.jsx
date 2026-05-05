@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { fmt, fmtDate, STATUTS_FACTURE } from '../lib/utils'
 import FactureModal from '../components/FactureModal'
+import { exportFacturesExcel, exportRegistreExcel } from '../lib/exportExcel'
 import EditFactureModal from '../components/EditFactureModal'
 import toast from 'react-hot-toast'
 
@@ -213,7 +214,15 @@ export default function Factures() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h1 style={{ fontSize: 18, fontWeight: 600 }}>Factures</h1>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Nouvelle facture</button>
+        <div style={{ display:'flex', gap:8 }}>
+          <button className="btn btn-ghost" onClick={() => exportFacturesExcel(factures, 'facture')} title="Exporter les factures en Excel/CSV">
+            📥 Export Excel
+          </button>
+          <button className="btn btn-ghost" onClick={() => exportRegistreExcel([...factures])} title="Exporter le registre complet">
+            📋 Registre
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Nouvelle facture</button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 4, background: 'var(--lgray)', padding: 4, borderRadius: 10, marginBottom: 20, width: 'fit-content' }}>
