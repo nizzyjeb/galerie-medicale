@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import PrintDocument from '../components/PrintDocument'
+import ContextMenu from '../components/ContextMenu'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { supabase } from '../lib/supabase'
 import { fmt, fmtDate, today, addDays, STATUTS_FACTURE } from '../lib/utils'
@@ -14,6 +15,7 @@ export default function ProForma() {
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [previewDoc, setPreviewDoc] = useState(null)
+  const [contextMenu, setContextMenu] = useState(null)
   const [editDoc, setEditDoc] = useState(null)
 
   useEffect(() => { fetchPF() }, [])
@@ -59,6 +61,22 @@ export default function ProForma() {
     fetchPF()
   }
 
+  const handleContextMenu = (e, p) => {
+    e.preventDefault()
+    setContextMenu({
+      x: e.clientX, y: e.clientY,
+      items: [
+        { icon: '👁', label: 'Aperçu / Imprimer', action: () => openPreview(p) },
+        { icon: '✏️', label: 'Modifier', action: () => setEditDoc(p) },
+        { icon: '📄', label: 'Convertir en facture', action: () => convertirEnFacture(p) },
+        ...(isAdmin ? [
+          'divider',
+          { icon: '🗑', label: 'Supprimer la pro forma', action: () => deleteProforma(p.id, p.numero), danger: true }
+        ] : [])
+      ]
+    })
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -89,7 +107,7 @@ export default function ProForma() {
               ) : proformas.map(p => {
                 const st = STATUTS_FACTURE[p.statut] || STATUTS_FACTURE.en_cours
                 return (
-                  <tr key={p.id}>
+                  <tr key={p.id} onContextMenu={e => handleContextMenu(e, p)} style={{ cursor:'context-menu' }}>
                     <td className="font-mono" style={{ color: 'var(--teal)', fontWeight: 600 }}>{p.numero}</td>
                     <td style={{ fontWeight: 500 }}>{p.client_nom}</td>
                     <td style={{ color: 'var(--gray)' }}>{p.objet}</td>
@@ -121,6 +139,7 @@ export default function ProForma() {
 
       {editDoc && <EditFactureModal doc={editDoc} onClose={() => setEditDoc(null)} onSaved={fetchPF} />}
       {showModal && <FactureModal type="proforma" onClose={() => setShowModal(false)} onSaved={fetchPF} />}
+      {contextMenu && <ContextMenu x={contextMenu.x} y={contextMenu.y} items={contextMenu.items} onClose={() => setContextMenu(null)} />}
       {previewDoc && <PrintDocument doc={previewDoc} type="proforma" onClose={() => setPreviewDoc(null)} />}
     </div>
   )

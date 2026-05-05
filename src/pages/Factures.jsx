@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import PrintDocument from '../components/PrintDocument'
+import ContextMenu from '../components/ContextMenu'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { supabase } from '../lib/supabase'
 import { fmt, fmtDate, STATUTS_FACTURE } from '../lib/utils'
@@ -15,6 +16,7 @@ export default function Factures() {
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [previewDoc, setPreviewDoc] = useState(null)
+  const [contextMenu, setContextMenu] = useState(null)
   const [editDoc, setEditDoc] = useState(null)
 
   useEffect(() => { fetchFactures() }, [])
@@ -43,6 +45,25 @@ export default function Factures() {
     await supabase.from('factures').delete().eq('id', id)
     toast.success(`Facture ${numero} supprimée`)
     fetchFactures()
+  }
+
+  const handleContextMenu = (e, f) => {
+    e.preventDefault()
+    setContextMenu({
+      x: e.clientX, y: e.clientY,
+      items: [
+        { icon: '👁', label: 'Aperçu / Imprimer', action: () => openPreview(f) },
+        { icon: '✏️', label: 'Modifier', action: () => setEditDoc(f) },
+        'divider',
+        { icon: '💰', label: 'Marquer Payée', action: () => changeStatut(f.id, 'payee') },
+        { icon: '⏳', label: 'Marquer En attente', action: () => changeStatut(f.id, 'attente') },
+        { icon: '🔴', label: 'Marquer En retard', action: () => changeStatut(f.id, 'retard') },
+        ...(isAdmin ? [
+          'divider',
+          { icon: '🗑', label: 'Supprimer la facture', action: () => deleteFacture(f.id, f.numero), danger: true }
+        ] : [])
+      ]
+    })
   }
 
   const filtered = filter === 'all' ? factures : factures.filter(f => f.statut === filter)
@@ -86,7 +107,7 @@ export default function Factures() {
               ) : filtered.map(f => {
                 const st = STATUTS_FACTURE[f.statut] || STATUTS_FACTURE.attente
                 return (
-                  <tr key={f.id}>
+                  <tr key={f.id} onContextMenu={e => handleContextMenu(e, f)} style={{ cursor:'context-menu' }}>
                     <td className="font-mono" style={{ color: 'var(--teal)', fontWeight: 600 }}>{f.numero}</td>
                     <td style={{ fontWeight: 500 }}>{f.client_nom}</td>
                     <td style={{ color: 'var(--gray)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.objet}</td>
@@ -121,6 +142,7 @@ export default function Factures() {
       {showModal && <FactureModal type="facture" onClose={() => setShowModal(false)} onSaved={fetchFactures} />}
       {editDoc && <EditFactureModal doc={editDoc} onClose={() => setEditDoc(null)} onSaved={fetchFactures} />}
       {previewDoc && <PrintDocument doc={previewDoc} type="facture" onClose={() => setPreviewDoc(null)} />}
+      {contextMenu && <ContextMenu x={contextMenu.x} y={contextMenu.y} items={contextMenu.items} onClose={() => setContextMenu(null)} />}
     </div>
   )
 }
