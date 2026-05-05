@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import PrintDocument from '../components/PrintDocument'
+import { useAuth } from '../hooks/useAuth.jsx'
 import { supabase } from '../lib/supabase'
 import { fmt, fmtDate, today, addDays, STATUTS_FACTURE } from '../lib/utils'
 import FactureModal from '../components/FactureModal'
@@ -8,6 +9,7 @@ import EditFactureModal from '../components/EditFactureModal'
 import toast from 'react-hot-toast'
 
 export default function ProForma() {
+  const { isAdmin } = useAuth()
   const [proformas, setProformas] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -46,6 +48,15 @@ export default function ProForma() {
       toast.success(`Facture ${numero} créée depuis ${pf.numero}`)
       fetchPF()
     }
+  }
+
+
+  const deleteProforma = async (id, numero) => {
+    if (!window.confirm(`Supprimer définitivement la pro forma ${numero} ? Cette action est irréversible.`)) return
+    await supabase.from('facture_lignes').delete().eq('facture_id', id)
+    await supabase.from('factures').delete().eq('id', id)
+    toast.success(`Pro forma ${numero} supprimée`)
+    fetchPF()
   }
 
   return (
@@ -89,6 +100,9 @@ export default function ProForma() {
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button className="btn btn-ghost btn-sm" onClick={() => setEditDoc(p)}>✏️ Modifier</button>
+                        {isAdmin && (
+                          <button className="btn btn-danger btn-sm" onClick={() => deleteProforma(p.id, p.numero)}>🗑 Suppr.</button>
+                        )}
                         <button className="btn btn-ghost btn-sm" onClick={() => openPreview(p)}>
                           👁 Aperçu
                         </button>

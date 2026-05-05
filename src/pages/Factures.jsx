@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import PrintDocument from '../components/PrintDocument'
+import { useAuth } from '../hooks/useAuth.jsx'
 import { supabase } from '../lib/supabase'
 import { fmt, fmtDate, STATUTS_FACTURE } from '../lib/utils'
 import FactureModal from '../components/FactureModal'
@@ -8,6 +9,7 @@ import EditFactureModal from '../components/EditFactureModal'
 import toast from 'react-hot-toast'
 
 export default function Factures() {
+  const { isAdmin } = useAuth()
   const [factures, setFactures] = useState([])
   const [filter, setFilter] = useState('all')
   const [showModal, setShowModal] = useState(false)
@@ -32,6 +34,15 @@ export default function Factures() {
     await supabase.from('factures').update({ statut }).eq('id', id)
     setFactures(prev => prev.map(f => f.id === id ? { ...f, statut } : f))
     toast.success('Statut mis à jour')
+  }
+
+
+  const deleteFacture = async (id, numero) => {
+    if (!window.confirm(`Supprimer définitivement la facture ${numero} ? Cette action est irréversible.`)) return
+    await supabase.from('facture_lignes').delete().eq('facture_id', id)
+    await supabase.from('factures').delete().eq('id', id)
+    toast.success(`Facture ${numero} supprimée`)
+    fetchFactures()
   }
 
   const filtered = filter === 'all' ? factures : factures.filter(f => f.statut === filter)
@@ -88,6 +99,9 @@ export default function Factures() {
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         <button className="btn btn-ghost btn-sm" onClick={() => openPreview(f)}>👁 Aperçu</button>
                         <button className="btn btn-ghost btn-sm" onClick={() => setEditDoc(f)}>✏️ Modifier</button>
+                        {isAdmin && (
+                          <button className="btn btn-danger btn-sm" onClick={() => deleteFacture(f.id, f.numero)}>🗑 Suppr.</button>
+                        )}
                         <select style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }}
                           value={f.statut} onChange={e => changeStatut(f.id, e.target.value)}>
                           <option value="attente">En attente</option>
