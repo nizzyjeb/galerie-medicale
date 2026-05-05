@@ -1,6 +1,6 @@
 import LOGO_BASE64 from '../lib/logo.js'
 import { fmt, fmtDate } from '../lib/utils'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function PrintDocument({ doc, type = 'facture', onClose }) {
   useEffect(() => {
@@ -16,6 +16,8 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
   const tva = doc.tva || 0
   const css = doc.css || 0
   const ttc = doc.total_ttc || 0
+  const [commercialTel, setCommercialTel] = useState('')
+  const [commercialEmail, setCommercialEmail] = useState('')
   const isProforma = type === 'proforma'
   const titre = isProforma ? 'FACTURE PRO FORMA' : 'FACTURE'
   const numero = doc.numero || '—'
@@ -58,7 +60,23 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
           display:'flex', justifyContent:'space-between', alignItems:'center',
           position:'sticky', top:0, background:'#fff', borderRadius:'12px 12px 0 0', zIndex:1 }}>
           <div style={{ fontWeight:600, fontSize:14 }}>Aperçu — {numero}</div>
-          <div style={{ display:'flex', gap:10 }}>
+          <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+            <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+              <input
+                placeholder="Tél. du commercial"
+                value={commercialTel}
+                onChange={e => setCommercialTel(e.target.value)}
+                style={{ padding:'5px 10px', borderRadius:7, border:'1px solid #e5e7eb',
+                  fontSize:12, width:170, fontFamily:'Arial,sans-serif' }}
+              />
+              <input
+                placeholder="Email du commercial"
+                value={commercialEmail}
+                onChange={e => setCommercialEmail(e.target.value)}
+                style={{ padding:'5px 10px', borderRadius:7, border:'1px solid #e5e7eb',
+                  fontSize:12, width:200, fontFamily:'Arial,sans-serif' }}
+              />
+            </div>
             <button onClick={onClose} style={{ padding:'6px 14px', borderRadius:7,
               border:'1px solid #e5e7eb', background:'transparent', cursor:'pointer', fontSize:13 }}>
               Fermer
@@ -76,6 +94,7 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
             doc={doc} lignes={lignes} sousTotal={sousTotal} remisePct={remisePct}
             remise={remise} base={base} tva={tva} css={css} ttc={ttc}
             isProforma={isProforma} titre={titre} numero={numero}
+            commercialTel={commercialTel} commercialEmail={commercialEmail}
           />
         </div>
       </div>
@@ -83,7 +102,7 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
   )
 }
 
-function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva, css, ttc, isProforma, titre, numero }) {
+function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva, css, ttc, isProforma, titre, numero, commercialTel, commercialEmail }) {
   const TEAL = '#1A9E8F'
   const TEAL_L = '#E8F6F5'
   const TEAL_M = '#B2DED9'
@@ -102,7 +121,7 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
 
       {/* ── EN-TÊTE : Logo gauche + Société centre ── */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:6 }}>
-        <img src={LOGO_BASE64} alt="Galerie Médicale" style={{ height:110, objectFit:'contain' }} />
+        <img src={LOGO_BASE64} alt="Galerie Médicale" style={{ height:160, objectFit:'contain' }} />
         <div style={{ flex:1, textAlign:'center', padding:'8px 20px 0' }}>
           <div style={{ fontSize:18, fontWeight:700, color:TEAL, letterSpacing:1 }}>GALERIE MÉDICALE</div>
           <div style={{ fontSize:10, color:GRAY, marginTop:2 }}>
@@ -151,9 +170,10 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
           <div style={{ border:`1px solid ${TEAL}`, borderTop:'none', padding:'8px 10px', fontSize:11, lineHeight:1.8 }}>
             <div style={{ fontWeight:700 }}>Galerie Médicale – SAJ Groupe</div>
             <div>Gallerie Océane, Libreville, Gabon</div>
-            <div>Tél. : (00241) 60202900</div>
-            <div>Email : acceuil@sajgroupe.com</div>
+            <div>Tél. : <span style={{ borderBottom: commercialTel ? 'none' : '1px solid #aaa', paddingBottom:1 }}>{commercialTel || '_______________________'}</span></div>
+            <div>Email : <span style={{ borderBottom: commercialEmail ? 'none' : '1px solid #aaa', paddingBottom:1 }}>{commercialEmail || '_______________________'}</span></div>
             <div>NIF : 49761L | RCCM : GA-LBV-01-2020-B12-00179</div>
+            <div style={{ marginTop:4, fontStyle:'italic', color:'#1A9E8F', fontWeight:600 }}>Représentant</div>
           </div>
         </div>
         {/* Client */}
