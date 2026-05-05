@@ -121,7 +121,7 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
 
       {/* ── EN-TÊTE : Logo gauche + Société centre ── */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:6 }}>
-        <img src={LOGO_BASE64} alt="Galerie Médicale" style={{ height:160, objectFit:'contain' }} />
+        <img src={LOGO_BASE64} alt="Galerie Médicale" style={{ height:220, objectFit:'contain' }} />
         <div style={{ flex:1, textAlign:'center', padding:'8px 20px 0' }}>
           <div style={{ fontSize:18, fontWeight:700, color:TEAL, letterSpacing:1 }}>GALERIE MÉDICALE</div>
           <div style={{ fontSize:10, color:GRAY, marginTop:2 }}>
