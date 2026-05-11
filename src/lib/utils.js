@@ -16,12 +16,21 @@ export const addDays = (d, days) => {
 
 export const calcTotals = (lignes, remisePct = 0) => {
   const sousTotal = lignes.reduce((s, l) => s + (l.quantite || 0) * (l.prix_unitaire || 0), 0)
+  // Sous-total des lignes soumises à TVA uniquement (les lignes exonérées sont exclues du calcul TVA/CSS)
+  const sousTotalTaxable = lignes.reduce(
+    (s, l) => s + (l.exonere_tva ? 0 : (l.quantite || 0) * (l.prix_unitaire || 0)),
+    0
+  )
+  const ratio = sousTotal > 0 ? sousTotalTaxable / sousTotal : 0
   const remise = sousTotal * (remisePct / 100)
   const base = sousTotal - remise
-  const tva = base * 0.18
-  const css = base * 0.01
+  // La remise s'applique au prorata sur la part taxable
+  const baseTaxable = sousTotalTaxable - (remise * ratio)
+  const tva = baseTaxable * 0.18
+  const css = baseTaxable * 0.01
   const ttc = base + tva + css
-  return { sousTotal, remise, base, tva, css, ttc }
+  const toutExonere = sousTotal > 0 && sousTotalTaxable === 0
+  return { sousTotal, remise, base, baseTaxable, tva, css, ttc, toutExonere }
 }
 
 export const ROLES = {

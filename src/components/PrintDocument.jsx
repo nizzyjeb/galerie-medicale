@@ -1,6 +1,7 @@
 import LOGO_BASE64 from '../lib/logo.js'
 import { fmt, fmtDate } from '../lib/utils'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 export default function PrintDocument({ doc, type = 'facture', onClose }) {
   useEffect(() => {
@@ -29,32 +30,55 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
 
       <style>{`
         @media print {
-          /* Masquer TOUT sauf la zone d'impression */
-          body > * { display: none !important; }
-          #print-root { display: block !important; position: fixed !important;
-            inset: 0 !important; background: white !important; overflow: visible !important; }
+          /* On reset html/body pour que le contenu en portail puisse s'afficher entierement */
+          html, body {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            height: auto !important;
+            min-height: 0 !important;
+            position: static !important;
+          }
+          /* On masque tous les freres de #print-root */
+          body > *:not(#print-root) { display: none !important; }
+          /* On affiche la zone d'impression en flux normal */
+          #print-root {
+            display: block !important;
+            position: static !important;
+            background: white !important;
+            overflow: visible !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+          #print-root * { visibility: visible !important; }
           .no-print { display: none !important; }
-          .print-only { display: none; }
-          /* Supprimer URL et en-têtes du navigateur */
-          @media print { .print-only { display: inline !important; } .no-print { display: none !important; } }
+          .print-only { display: inline !important; }
           @page {
             size: A4 portrait;
             margin: 10mm 12mm 10mm 12mm;
           }
         }
-        @page { size: A4; margin: 10mm 12mm 10mm 12mm; }
+        @media screen {
+          #print-root { display: none !important; }
+        }
       `}</style>
 
-      {/* Zone qui sera visible à l'impression */}
-      <div id="print-root" style={{ display:'none' }}>
-        <DocumentContent
-          doc={doc} lignes={lignes} sousTotal={sousTotal} remisePct={remisePct}
-          remise={remise} base={base} tva={tva} css={css} ttc={ttc}
-          isProforma={isProforma} titre={titre} numero={numero}
-          commercialTel={commercialTel} commercialEmail={commercialEmail}
-          unites={unites} setUnites={setUnites}
-        />
-      </div>
+      {/* Zone d'impression : montée en portail directement sous body pour échapper au modal */}
+      {typeof document !== 'undefined' && createPortal(
+        <div id="print-root">
+          <DocumentContent
+            doc={doc} lignes={lignes} sousTotal={sousTotal} remisePct={remisePct}
+            remise={remise} base={base} tva={tva} css={css} ttc={ttc}
+            isProforma={isProforma} titre={titre} numero={numero}
+            commercialTel={commercialTel} commercialEmail={commercialEmail}
+            unites={unites} setUnites={setUnites}
+          />
+        </div>,
+        document.body
+      )}
 
       {/* Aperçu écran */}
       <div style={{ background:'#fff', borderRadius:12, width:'100%', maxWidth:820,
@@ -276,18 +300,25 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
         <table style={{ width:300, borderCollapse:'collapse', fontSize:11 }}>
           <tbody>
             {[
-              ['Sous-total HT :', fmt(sousTotal)],
-              ['Remise (%) :', (remisePct||0).toFixed(1) + '%'],
-              ['Montant remise :', fmt(remise)],
-              ['Base HT après remise :', fmt(base)],
-              ['TVA (18%) :', fmt(tva)],
-              ['CSS (1%) :', fmt(css)],
-            ].map(([label, val]) => (
+              ['Sous-total HT :', fmt(sousTotal), true],
+              ['Remise (%) :', (remisePct||0).toFixed(1) + '%', true],
+              ['Montant remise :', fmt(remise), true],
+              ['Base HT après remise :', fmt(base), true],
+              ['TVA (18%) :', fmt(tva), tva > 0],
+              ['CSS (1%) :', fmt(css), css > 0],
+            ].filter(([,,show]) => show).map(([label, val]) => (
               <tr key={label}>
                 <td style={{ padding:'3px 8px', borderBottom:'1px solid #e5e7eb', textAlign:'right', color:GRAY }}>{label}</td>
                 <td style={{ padding:'3px 8px', fontFamily:'monospace', borderBottom:'1px solid #e5e7eb', textAlign:'right' }}>{val}</td>
               </tr>
             ))}
+            {tva === 0 && css === 0 && (
+              <tr>
+                <td colSpan={2} style={{ padding:'5px 8px', textAlign:'right', fontStyle:'italic', color:'#92400e', fontSize:10 }}>
+                  TVA et CSS non applicables (items exonérés)
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -330,7 +361,9 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
           <div style={{ fontSize:10, lineHeight:1.9, color:DARK }}>
             <div>• Délai de paiement :</div>
             <div>• Pénalités : 1,5% / mois de retard</div>
-            <div>• TVA 18% et CSS 1% — CGI du Gabon</div>
+            {tva === 0 && css === 0
+              ? <div>• Items exonérés de TVA — CGI du Gabon</div>
+              : <div>• TVA 18% et CSS 1% — CGI du Gabon</div>}
             <div>• Toute facture non contestée dans 8 jours</div>
             <div style={{ paddingLeft:8 }}>est réputée acceptée.</div>
           </div>

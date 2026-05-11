@@ -29,6 +29,7 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
         quantite: l.quantite,
         prix_unitaire: l.prix_unitaire,
         produit_id: l.produit_id,
+        exonere_tva: !!l.exonere_tva,
         isNew: false
       })))
       setLoading(false)
@@ -41,19 +42,19 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
   const applyProduit = (i, produitId) => {
     const p = produits.find(p => p.id === parseInt(produitId))
     if (p) setLignes(prev => prev.map((l, idx) => idx === i
-      ? { ...l, designation: p.designation, prix_unitaire: p.prix_ht, produit_id: p.id }
+      ? { ...l, designation: p.designation, prix_unitaire: p.prix_ht, produit_id: p.id, exonere_tva: !!p.exonere_tva }
       : l))
   }
 
   const addLigne = () => setLignes(prev => [...prev, {
-    id: null, designation: '', quantite: 1, prix_unitaire: '', produit_id: null, isNew: true
+    id: null, designation: '', quantite: 1, prix_unitaire: '', produit_id: null, exonere_tva: false, isNew: true
   }])
 
   const removeLigne = (i) => setLignes(prev => prev.filter((_, idx) => idx !== i))
 
   const lignesValides = lignes.filter(l => l.designation && parseFloat(l.quantite) > 0 && parseFloat(l.prix_unitaire) > 0)
   const totaux = calcTotals(
-    lignesValides.map(l => ({ quantite: parseFloat(l.quantite), prix_unitaire: parseFloat(l.prix_unitaire) })),
+    lignesValides.map(l => ({ quantite: parseFloat(l.quantite), prix_unitaire: parseFloat(l.prix_unitaire), exonere_tva: !!l.exonere_tva })),
     parseFloat(form.remise_pct) || 0
   )
 
@@ -90,6 +91,7 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
         designation: l.designation,
         quantite: parseFloat(l.quantite),
         prix_unitaire: parseFloat(l.prix_unitaire),
+        exonere_tva: !!l.exonere_tva,
         ordre: i
       }))
     )
@@ -158,7 +160,7 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
           </div>
 
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ minWidth: 540 }}>
+            <table style={{ minWidth: 620 }}>
               <thead>
                 <tr>
                   <th style={{ width: 30 }}>#</th>
@@ -166,6 +168,7 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
                   <th style={{ width: 70 }}>Qté</th>
                   <th style={{ width: 140, textAlign: 'right' }}>P.U. (FCFA)</th>
                   <th style={{ width: 140, textAlign: 'right' }}>Total HT</th>
+                  <th style={{ width: 70, textAlign: 'center' }} title="Exonéré de TVA">Exo. TVA</th>
                   <th style={{ width: 30 }}></th>
                 </tr>
               </thead>
@@ -180,7 +183,7 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
                         onChange={e => applyProduit(i, e.target.value)}
                       >
                         <option value="">-- Choisir un produit --</option>
-                        {produits.map(p => <option key={p.id} value={p.id}>{p.designation}</option>)}
+                        {produits.map(p => <option key={p.id} value={p.id}>{p.designation}{p.exonere_tva ? ' (exonéré)' : ''}</option>)}
                       </select>
                       <input
                         style={{ border: 'none', background: 'transparent', width: '100%', fontSize: 12, color: 'var(--gray)' }}
@@ -211,6 +214,15 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
                         ? fmt(parseFloat(l.quantite) * parseFloat(l.prix_unitaire))
                         : '—'}
                     </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={!!l.exonere_tva}
+                        onChange={e => setLigne(i, 'exonere_tva', e.target.checked)}
+                        title="Cette ligne est exonérée de TVA"
+                        style={{ cursor:'pointer' }}
+                      />
+                    </td>
                     <td>
                       <button onClick={() => removeLigne(i)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '2px 6px', fontSize: 14 }}>✕</button>
                     </td>
@@ -233,17 +245,22 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
             </div>
             <div style={{ minWidth: 280 }}>
               {[
-                ['Sous-total HT', totaux.sousTotal],
-                ['Remise', -totaux.remise],
-                ['Base HT après remise', totaux.base],
-                ['TVA 18%', totaux.tva],
-                ['CSS 1%', totaux.css],
-              ].map(([label, val]) => (
+                ['Sous-total HT', totaux.sousTotal, true],
+                ['Remise', -totaux.remise, true],
+                ['Base HT après remise', totaux.base, true],
+                ['TVA 18%', totaux.tva, totaux.tva > 0],
+                ['CSS 1%', totaux.css, totaux.css > 0],
+              ].filter(([,,show]) => show).map(([label, val]) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
                   <span style={{ color: 'var(--gray)' }}>{label}</span>
                   <span className="font-mono">{fmt(Math.abs(val))}</span>
                 </div>
               ))}
+              {totaux.toutExonere && (
+                <div style={{ fontSize:11, color:'#92400e', background:'#fef3c7', padding:'6px 10px', borderRadius:6, marginBottom:6, fontStyle:'italic' }}>
+                  Toutes les lignes sont exonérées — pas de TVA ni CSS appliquée.
+                </div>
+              )}
               <div style={{ background: 'var(--teal)', borderRadius: 8, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
                 <span style={{ color: '#fff', fontSize: 13, fontWeight: 500 }}>TOTAL TTC</span>
                 <span style={{ color: '#fff', fontFamily: 'var(--mono)', fontSize: 17, fontWeight: 600 }}>{fmt(totaux.ttc)}</span>

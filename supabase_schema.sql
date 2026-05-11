@@ -22,9 +22,10 @@ create table if not exists public.produits (
   categorie text not null default 'CONSOMMABLE',
   unite text not null default 'PIECE',
   prix_ht numeric(12,2) not null default 0,
-  tva numeric(12,2) generated always as (prix_ht * 0.18) stored,
-  css numeric(12,2) generated always as (prix_ht * 0.01) stored,
-  prix_ttc numeric(12,2) generated always as (prix_ht * 1.19) stored,
+  exonere_tva boolean not null default false,
+  tva numeric(12,2) generated always as (case when exonere_tva then 0 else prix_ht * 0.18 end) stored,
+  css numeric(12,2) generated always as (case when exonere_tva then 0 else prix_ht * 0.01 end) stored,
+  prix_ttc numeric(12,2) generated always as (case when exonere_tva then prix_ht else prix_ht * 1.19 end) stored,
   actif boolean default true,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -77,6 +78,7 @@ create table if not exists public.facture_lignes (
   designation text not null,
   quantite numeric(10,2) not null default 1,
   prix_unitaire numeric(12,2) not null default 0,
+  exonere_tva boolean not null default false,
   total_ht numeric(12,2) generated always as (quantite * prix_unitaire) stored,
   ordre int default 0
 );
