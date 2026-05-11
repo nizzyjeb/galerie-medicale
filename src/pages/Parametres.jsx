@@ -31,20 +31,38 @@ export default function Parametres() {
   useEffect(() => { fetchParams() }, [])
 
   const fetchParams = async () => {
-    const { data } = await supabase.from('parametres').select('*').limit(1).single()
+    const { data, error } = await supabase.from('parametres').select('*').limit(1).maybeSingle()
+    if (error && error.code !== 'PGRST116') {
+      console.error('Erreur chargement parametres:', error)
+      toast.error('Impossible de charger les paramètres : ' + (error.message || error.hint || 'erreur inconnue'))
+    }
     if (data) setParams({ ...DEFAULT_PARAMS, ...data })
     setLoading(false)
   }
 
   const handleSave = async () => {
     setSaving(true)
-    const { data: existing } = await supabase.from('parametres').select('id').limit(1).single()
-    if (existing) {
-      await supabase.from('parametres').update(params).eq('id', existing.id)
-    } else {
-      await supabase.from('parametres').insert(params)
+    const { data: existing, error: selErr } = await supabase.from('parametres').select('id').limit(1).maybeSingle()
+    if (selErr && selErr.code !== 'PGRST116') {
+      toast.error('Erreur lecture : ' + (selErr.message || selErr.hint || 'erreur inconnue'))
+      console.error(selErr)
+      setSaving(false)
+      return
     }
-    toast.success('Paramètres enregistrés !')
+    const payload = { ...params }
+    delete payload.id
+    let result
+    if (existing) {
+      result = await supabase.from('parametres').update(payload).eq('id', existing.id)
+    } else {
+      result = await supabase.from('parametres').insert(payload)
+    }
+    if (result.error) {
+      toast.error('Échec de la sauvegarde : ' + (result.error.message || result.error.hint || 'la table parametres existe-t-elle ?'))
+      console.error('Erreur sauvegarde parametres:', result.error)
+    } else {
+      toast.success('Paramètres enregistrés !')
+    }
     setSaving(false)
   }
 

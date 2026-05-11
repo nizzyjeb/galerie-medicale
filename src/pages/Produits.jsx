@@ -173,7 +173,7 @@ export default function Produits() {
                     <div>
                       <div style={{ fontWeight:600, fontSize:13 }}>Exonéré de TVA</div>
                       <div style={{ fontSize:11, color:'var(--gray)', marginTop:2 }}>
-                        Aucune TVA (18%) ni CSS (1%) ne sera appliquée sur ce produit dans les factures et pro forma.
+                        Aucune TVA (18%) ne sera appliquée sur ce produit. La CSS (1%) reste due.
                       </div>
                     </div>
                   </label>
@@ -184,7 +184,7 @@ export default function Produits() {
                       Aperçu des prix {form.exonere_tva && <span style={{ color:'#92400e' }}>(exonéré)</span>}
                     </div>
                     {(form.exonere_tva
-                      ? [['HT', prix], ['TVA', 0], ['CSS', 0], ['TTC', prix]]
+                      ? [['HT', prix], ['TVA', 0], ['CSS 1%', prix*.01], ['TTC', prix*1.01]]
                       : [['HT', prix], ['TVA 18%', prix*.18], ['CSS 1%', prix*.01], ['TTC', prix*1.19]]
                     ).map(([l,v]) => (
                       <div key={l} style={{ display:'flex', justifyContent:'space-between', fontSize:13, marginBottom:5 }}>

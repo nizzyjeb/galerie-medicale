@@ -202,16 +202,16 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
                 ['Remise', -totaux.remise, true],
                 ['Base HT après remise', totaux.base, true],
                 ['TVA 18%', totaux.tva, totaux.tva > 0],
-                ['CSS 1%', totaux.css, totaux.css > 0],
+                ['CSS 1%', totaux.css, true],
               ].filter(([,,show]) => show).map(([label, val]) => (
                 <div key={label} style={{ display:'flex', justifyContent:'space-between', fontSize:13, marginBottom:6 }}>
                   <span style={{ color:'var(--gray)' }}>{label}</span>
                   <span className="font-mono">{fmt(Math.abs(val))}</span>
                 </div>
               ))}
-              {totaux.toutExonere && (
+              {totaux.tvaExoneree && (
                 <div style={{ fontSize:11, color:'#92400e', background:'#fef3c7', padding:'6px 10px', borderRadius:6, marginBottom:6, fontStyle:'italic' }}>
-                  Toutes les lignes sont exonérées — pas de TVA ni CSS appliquée.
+                  Toutes les lignes sont exonérées de TVA. La CSS (1%) reste due.
                 </div>
               )}
               <div style={{ background:'var(--teal)', borderRadius:8, padding:'10px 14px', display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:8 }}>

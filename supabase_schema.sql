@@ -24,8 +24,8 @@ create table if not exists public.produits (
   prix_ht numeric(12,2) not null default 0,
   exonere_tva boolean not null default false,
   tva numeric(12,2) generated always as (case when exonere_tva then 0 else prix_ht * 0.18 end) stored,
-  css numeric(12,2) generated always as (case when exonere_tva then 0 else prix_ht * 0.01 end) stored,
-  prix_ttc numeric(12,2) generated always as (case when exonere_tva then prix_ht else prix_ht * 1.19 end) stored,
+  css numeric(12,2) generated always as (prix_ht * 0.01) stored,
+  prix_ttc numeric(12,2) generated always as (case when exonere_tva then prix_ht * 1.01 else prix_ht * 1.19 end) stored,
   actif boolean default true,
   created_at timestamptz default now(),
   updated_at timestamptz default now()

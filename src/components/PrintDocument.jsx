@@ -30,7 +30,6 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
 
       <style>{`
         @media print {
-          /* On reset html/body pour que le contenu en portail puisse s'afficher entierement */
           html, body {
             background: white !important;
             margin: 0 !important;
@@ -40,9 +39,7 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
             min-height: 0 !important;
             position: static !important;
           }
-          /* On masque tous les freres de #print-root */
           body > *:not(#print-root) { display: none !important; }
-          /* On affiche la zone d'impression en flux normal */
           #print-root {
             display: block !important;
             position: static !important;
@@ -54,11 +51,14 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
             height: auto !important;
           }
           #print-root * { visibility: visible !important; }
+          /* Tient sur 1 page A4 : evite les sauts de page entre sections importantes */
+          #print-root, #print-root * { page-break-inside: avoid !important; }
+          #print-root table { page-break-inside: auto !important; }
           .no-print { display: none !important; }
           .print-only { display: inline !important; }
           @page {
             size: A4 portrait;
-            margin: 10mm 12mm 10mm 12mm;
+            margin: 6mm 8mm 6mm 8mm;
           }
         }
         @media screen {
@@ -139,43 +139,39 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
   const DARK = '#2C2C2C'
   const GRAY = '#6D6D6D'
 
-  // Compléter jusqu'à 10 lignes
-  const totalLignes = 10
-  const lignesAffichees = [
-    ...lignes,
-    ...Array.from({ length: Math.max(0, totalLignes - lignes.length) }).map(() => null)
-  ]
+  // Afficher uniquement les lignes reellement facturees (plus de remplissage vide)
+  const lignesAffichees = lignes
 
   return (
     <div style={{ fontFamily:'Arial, sans-serif', fontSize:11, color:DARK, background:'#fff' }}>
 
       {/* ── EN-TÊTE : Logo gauche + Société centre ── */}
-      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:6 }}>
-        <img src={LOGO_BASE64} alt="Galerie Médicale" style={{ height:130, objectFit:'contain' }} />
-        <div style={{ flex:1, textAlign:'center', padding:'8px 20px 0' }}>
-          <div style={{ fontSize:18, fontWeight:700, color:TEAL, letterSpacing:1 }}>GALERIE MÉDICALE</div>
-          <div style={{ fontSize:10, color:GRAY, marginTop:2 }}>
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:3 }}>
+        <img src={LOGO_BASE64} alt="Galerie Médicale" style={{ height:75, objectFit:'contain' }} />
+        <div style={{ flex:1, textAlign:'center', padding:'4px 16px 0' }}>
+          <div style={{ fontSize:16, fontWeight:700, color:TEAL, letterSpacing:1 }}>GALERIE MÉDICALE</div>
+          <div style={{ fontSize:9, color:GRAY, marginTop:2 }}>
             Tél. : (00241) 60202900 | Acceuil@sajgroupe.com | www.sajgroupe.com
           </div>
         </div>
-        <div style={{ width:120 }} />
+        <div style={{ width:75 }} />
       </div>
 
       {/* Barre teal */}
-      <div style={{ height:5, background:TEAL, borderRadius:2, margin:'8px 0' }} />
+      <div style={{ height:3, background:TEAL, borderRadius:2, margin:'4px 0' }} />
 
       {/* ── TITRE + N° ── */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', margin:'8px 0 6px' }}>
-        <div style={{ background:'#e5e7eb', padding:'5px 20px', borderRadius:4 }}>
-          <span style={{ fontSize:20, fontWeight:900, color:TEAL, letterSpacing:2 }}>{titre}</span>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', margin:'4px 0 4px' }}>
+        <div style={{ background:'#e5e7eb', padding:'3px 16px', borderRadius:4 }}>
+          <span style={{ fontSize:17, fontWeight:900, color:TEAL, letterSpacing:2 }}>{titre}</span>
         </div>
-        <div style={{ background:'#e5e7eb', padding:'5px 18px', borderRadius:4 }}>
-          <span style={{ fontSize:14, fontWeight:700, color:DARK }}>N° {numero}</span>
+        <div style={{ background:'#e5e7eb', padding:'3px 14px', borderRadius:4 }}>
+          <span style={{ fontSize:13, fontWeight:700, color:DARK }}>N° {numero}</span>
         </div>
       </div>
 
-      {/* ── BLOC DATES/OBJET (aligné à droite comme le modèle) ── */}
-      <table style={{ width:'55%', marginLeft:'auto', borderCollapse:'collapse', marginBottom:10, fontSize:11 }}>
+      {/* ── BLOC DATES/OBJET ── */}
+      <table style={{ width:'55%', marginLeft:'auto', borderCollapse:'collapse', marginBottom:5, fontSize:10 }}>
         <tbody>
           {[
             ["Date d'émission :", fmtDate(doc.date_emission)],
@@ -184,20 +180,20 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
             ["Objet :", doc.objet || ''],
           ].map(([label, val]) => (
             <tr key={label}>
-              <td style={{ padding:'2px 10px', fontWeight:700, borderBottom:'1px solid #e5e7eb', width:'45%' }}>{label}</td>
-              <td style={{ padding:'2px 10px', borderBottom:'1px solid #e5e7eb' }}>{val}</td>
+              <td style={{ padding:'1px 8px', fontWeight:700, borderBottom:'1px solid #e5e7eb', width:'45%' }}>{label}</td>
+              <td style={{ padding:'1px 8px', borderBottom:'1px solid #e5e7eb' }}>{val}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
       {/* ── ÉMETTEUR / CLIENT ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:8 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:5 }}>
         {/* Émetteur */}
         <div>
-          <div style={{ background:TEAL, color:'#fff', fontWeight:700, fontSize:11,
-            padding:'5px 10px', textAlign:'center', borderRadius:'4px 4px 0 0' }}>ÉMETTEUR</div>
-          <div style={{ border:`1px solid ${TEAL}`, borderTop:'none', padding:'8px 10px', fontSize:11, lineHeight:1.8 }}>
+          <div style={{ background:TEAL, color:'#fff', fontWeight:700, fontSize:10,
+            padding:'3px 8px', textAlign:'center', borderRadius:'4px 4px 0 0' }}>ÉMETTEUR</div>
+          <div style={{ border:`1px solid ${TEAL}`, borderTop:'none', padding:'5px 8px', fontSize:10, lineHeight:1.5 }}>
             <div style={{ fontWeight:700 }}>Galerie Médicale – SAJ Groupe</div>
             <div>Gallerie Océane, Libreville, Gabon</div>
             <div>Tél. : <span style={{ borderBottom: commercialTel ? 'none' : '1px solid #aaa', paddingBottom:1 }}>{commercialTel || '_______________________'}</span></div>
@@ -208,9 +204,9 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
         </div>
         {/* Client */}
         <div>
-          <div style={{ background:TEAL, color:'#fff', fontWeight:700, fontSize:11,
-            padding:'5px 10px', textAlign:'center', borderRadius:'4px 4px 0 0' }}>CLIENT / DESTINATAIRE</div>
-          <div style={{ border:`1px solid ${TEAL}`, borderTop:'none', padding:'8px 10px', fontSize:11, lineHeight:1.8 }}>
+          <div style={{ background:TEAL, color:'#fff', fontWeight:700, fontSize:10,
+            padding:'3px 8px', textAlign:'center', borderRadius:'4px 4px 0 0' }}>CLIENT / DESTINATAIRE</div>
+          <div style={{ border:`1px solid ${TEAL}`, borderTop:'none', padding:'5px 8px', fontSize:10, lineHeight:1.5 }}>
             {[
               ['Nom / Raison sociale :', doc.client_nom || ''],
               ['Adresse :', doc.client_adresse || ''],
@@ -236,19 +232,19 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
       )}
 
       {/* ── TITRE TABLEAU ── */}
-      <div style={{ background:TEAL, color:'#fff', fontWeight:700, fontSize:11,
-        padding:'5px 10px', textAlign:'center', marginBottom:0 }}>
+      <div style={{ background:TEAL, color:'#fff', fontWeight:700, fontSize:10,
+        padding:'3px 8px', textAlign:'center', marginBottom:0 }}>
         DÉTAIL DES PRESTATIONS
       </div>
 
       {/* ── TABLEAU PRESTATIONS ── */}
-      <table style={{ width:'100%', borderCollapse:'collapse', marginBottom:8 }}>
+      <table style={{ width:'100%', borderCollapse:'collapse', marginBottom:5 }}>
         <thead>
           <tr style={{ background:TEAL_M }}>
             {[['N°','30px','center'],['Désignation / Prestation','','left'],
               ['Qté','50px','center'],['Unité','70px','center'],
               ['P.U. (FCFA)','110px','right'],['Total HT','115px','right']].map(([h,w,a]) => (
-              <th key={h} style={{ padding:'6px 8px', fontSize:10, fontWeight:700, color:DARK,
+              <th key={h} style={{ padding:'3px 6px', fontSize:9, fontWeight:700, color:DARK,
                 borderBottom:`2px solid ${TEAL}`, width:w||'auto', textAlign:a }}>
                 {h}
               </th>
@@ -258,10 +254,10 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
         <tbody>
           {lignesAffichees.map((l, i) => (
             <tr key={i} style={{ background: i % 2 === 0 ? TEAL_L : '#fff' }}>
-              <td style={{ padding:'5px 8px', fontSize:10, textAlign:'center', borderBottom:'1px solid #e5e7eb', color:GRAY }}>{i+1}</td>
-              <td style={{ padding:'5px 8px', fontSize:10, borderBottom:'1px solid #e5e7eb' }}>{l?.designation || ''}</td>
-              <td style={{ padding:'5px 8px', fontSize:10, textAlign:'center', borderBottom:'1px solid #e5e7eb' }}>{l?.quantite || ''}</td>
-              <td style={{ padding:'5px 8px', fontSize:10, textAlign:'center', borderBottom:'1px solid #e5e7eb' }}>
+              <td style={{ padding:'3px 6px', fontSize:9, textAlign:'center', borderBottom:'1px solid #e5e7eb', color:GRAY }}>{i+1}</td>
+              <td style={{ padding:'3px 6px', fontSize:9, borderBottom:'1px solid #e5e7eb' }}>{l?.designation || ''}</td>
+              <td style={{ padding:'3px 6px', fontSize:9, textAlign:'center', borderBottom:'1px solid #e5e7eb' }}>{l?.quantite || ''}</td>
+              <td style={{ padding:'3px 6px', fontSize:9, textAlign:'center', borderBottom:'1px solid #e5e7eb' }}>
                 {l ? (
                   <>
                     <select
@@ -284,10 +280,10 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
                   <span style={{ fontStyle:'italic', color:GRAY }}>—</span>
                 )}
               </td>
-              <td style={{ padding:'5px 8px', fontSize:10, textAlign:'right', fontFamily:'monospace', borderBottom:'1px solid #e5e7eb' }}>
+              <td style={{ padding:'3px 6px', fontSize:9, textAlign:'right', fontFamily:'monospace', borderBottom:'1px solid #e5e7eb' }}>
                 {l ? fmt(l.prix_unitaire) : ''}
               </td>
-              <td style={{ padding:'5px 8px', fontSize:10, textAlign:'right', fontFamily:'monospace', fontWeight:600, borderBottom:'1px solid #e5e7eb' }}>
+              <td style={{ padding:'3px 6px', fontSize:9, textAlign:'right', fontFamily:'monospace', fontWeight:600, borderBottom:'1px solid #e5e7eb' }}>
                 {l ? fmt(l.total_ht) : '-'}
               </td>
             </tr>
@@ -296,8 +292,8 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
       </table>
 
       {/* ── TOTAUX ── */}
-      <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:8 }}>
-        <table style={{ width:300, borderCollapse:'collapse', fontSize:11 }}>
+      <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:4 }}>
+        <table style={{ width:280, borderCollapse:'collapse', fontSize:10 }}>
           <tbody>
             {[
               ['Sous-total HT :', fmt(sousTotal), true],
@@ -305,33 +301,33 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
               ['Montant remise :', fmt(remise), true],
               ['Base HT après remise :', fmt(base), true],
               ['TVA (18%) :', fmt(tva), tva > 0],
-              ['CSS (1%) :', fmt(css), css > 0],
+              ['CSS (1%) :', fmt(css), true],
             ].filter(([,,show]) => show).map(([label, val]) => (
               <tr key={label}>
-                <td style={{ padding:'3px 8px', borderBottom:'1px solid #e5e7eb', textAlign:'right', color:GRAY }}>{label}</td>
-                <td style={{ padding:'3px 8px', fontFamily:'monospace', borderBottom:'1px solid #e5e7eb', textAlign:'right' }}>{val}</td>
+                <td style={{ padding:'2px 6px', borderBottom:'1px solid #e5e7eb', textAlign:'right', color:GRAY }}>{label}</td>
+                <td style={{ padding:'2px 6px', fontFamily:'monospace', borderBottom:'1px solid #e5e7eb', textAlign:'right' }}>{val}</td>
               </tr>
             ))}
-            {tva === 0 && css === 0 && (
+            {tva === 0 && css > 0 && (
               <tr>
-                <td colSpan={2} style={{ padding:'5px 8px', textAlign:'right', fontStyle:'italic', color:'#92400e', fontSize:10 }}>
-                  TVA et CSS non applicables (items exonérés)
+                <td colSpan={2} style={{ padding:'2px 6px', textAlign:'right', fontStyle:'italic', color:'#92400e', fontSize:9 }}>
+                  TVA non applicable (items exonérés)
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-      <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:8 }}>
-        <div style={{ width:300, background:TEAL, color:'#fff', display:'flex',
-          justifyContent:'space-between', padding:'7px 8px', fontWeight:700, fontSize:13, borderRadius:4 }}>
+      <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:5 }}>
+        <div style={{ width:280, background:TEAL, color:'#fff', display:'flex',
+          justifyContent:'space-between', padding:'5px 8px', fontWeight:700, fontSize:12, borderRadius:4 }}>
           <span>TOTAL TTC :</span>
           <span style={{ fontFamily:'monospace' }}>{fmt(ttc)}</span>
         </div>
       </div>
 
       {/* ── ARRÊTÉ ── */}
-      <div style={{ fontSize:11, fontStyle:'italic', marginBottom:8, padding:'5px 10px',
+      <div style={{ fontSize:10, fontStyle:'italic', marginBottom:5, padding:'3px 8px',
         background:'#f9f9f9', borderLeft:`3px solid ${TEAL}` }}>
         {isProforma
           ? <>Estimation arrêtée à la somme de : <strong>{fmt(ttc)}</strong> FCFA TTC (sous réserve de validation)</>
@@ -340,56 +336,55 @@ function DocumentContent({ doc, lignes, sousTotal, remisePct, remise, base, tva,
       </div>
 
       {/* ── MODALITÉS / CONDITIONS ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:5 }}>
         <div>
-          <div style={{ color:TEAL, fontWeight:700, fontSize:11, borderBottom:`1px solid ${TEAL}`, paddingBottom:3, marginBottom:5 }}>
+          <div style={{ color:TEAL, fontWeight:700, fontSize:10, borderBottom:`1px solid ${TEAL}`, paddingBottom:2, marginBottom:3 }}>
             MODALITÉS DE PAIEMENT
           </div>
-          <div style={{ fontSize:10, lineHeight:1.9, color:DARK }}>
+          <div style={{ fontSize:9, lineHeight:1.4, color:DARK }}>
             <div>Virement bancaire :</div>
-            <div style={{ paddingLeft:8 }}>Banque : ORABANK</div>
-            <div style={{ paddingLeft:8 }}>N° Compte : 40021 01000 21953600201 25</div>
-            <div style={{ paddingLeft:8 }}>Libellé : Fact. N° {numero}</div>
+            <div style={{ paddingLeft:6 }}>Banque : ORABANK</div>
+            <div style={{ paddingLeft:6 }}>N° Compte : 40021 01000 21953600201 25</div>
+            <div style={{ paddingLeft:6 }}>Libellé : Fact. N° {numero}</div>
             <div>Mobile Money : Airtel / Moov</div>
             <div>Espèces acceptées</div>
           </div>
         </div>
         <div>
-          <div style={{ color:TEAL, fontWeight:700, fontSize:11, borderBottom:`1px solid ${TEAL}`, paddingBottom:3, marginBottom:5 }}>
+          <div style={{ color:TEAL, fontWeight:700, fontSize:10, borderBottom:`1px solid ${TEAL}`, paddingBottom:2, marginBottom:3 }}>
             CONDITIONS GÉNÉRALES
           </div>
-          <div style={{ fontSize:10, lineHeight:1.9, color:DARK }}>
+          <div style={{ fontSize:9, lineHeight:1.4, color:DARK }}>
             <div>• Délai de paiement :</div>
             <div>• Pénalités : 1,5% / mois de retard</div>
-            {tva === 0 && css === 0
-              ? <div>• Items exonérés de TVA — CGI du Gabon</div>
+            {tva === 0
+              ? <div>• Items exonérés de TVA (CSS 1% maintenue) — CGI du Gabon</div>
               : <div>• TVA 18% et CSS 1% — CGI du Gabon</div>}
-            <div>• Toute facture non contestée dans 8 jours</div>
-            <div style={{ paddingLeft:8 }}>est réputée acceptée.</div>
+            <div>• Toute facture non contestée dans 8 jours est réputée acceptée.</div>
           </div>
         </div>
       </div>
 
-      {/* ── SIGNATURES ── */}
-      <div style={{ height:1, background:TEAL, margin:'8px 0' }} />
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:30, marginBottom:10 }}>
+      {/* ── SIGNATURES (compactes) ── */}
+      <div style={{ height:1, background:TEAL, margin:'4px 0' }} />
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, marginBottom:5 }}>
         <div>
-          <div style={{ fontSize:11, fontWeight:700, marginBottom:40 }}>Signature et cachet du client :</div>
-          <div style={{ borderBottom:'1px solid #ccc', paddingBottom:3, fontSize:10, color:GRAY, fontStyle:'italic' }}>
+          <div style={{ fontSize:10, fontWeight:700, marginBottom:20 }}>Signature et cachet du client :</div>
+          <div style={{ borderBottom:'1px solid #ccc', paddingBottom:2, fontSize:9, color:GRAY, fontStyle:'italic' }}>
             (Bon pour accord)
           </div>
         </div>
         <div>
-          <div style={{ fontSize:11, fontWeight:700, marginBottom:40 }}>Signature et cachet Galerie Médicale :</div>
-          <div style={{ borderBottom:'1px solid #ccc', paddingBottom:3, fontSize:10, color:GRAY, fontStyle:'italic' }}>
+          <div style={{ fontSize:10, fontWeight:700, marginBottom:20 }}>Signature et cachet Galerie Médicale :</div>
+          <div style={{ borderBottom:'1px solid #ccc', paddingBottom:2, fontSize:9, color:GRAY, fontStyle:'italic' }}>
             Fait à Libreville, le : _______________
           </div>
         </div>
       </div>
 
-      {/* ── PIED DE PAGE : identique au modèle Excel ── */}
-      <div style={{ height:4, background:TEAL, borderRadius:2, margin:'8px 0 5px' }} />
-      <div style={{ fontSize:9, color:GRAY, textAlign:'center', lineHeight:1.6 }}>
+      {/* ── PIED DE PAGE ── */}
+      <div style={{ height:3, background:TEAL, borderRadius:2, margin:'4px 0 3px' }} />
+      <div style={{ fontSize:8, color:GRAY, textAlign:'center', lineHeight:1.4 }}>
         Société à Responsabilité Limitée au Capital de 10 000 000 FCFA &nbsp;|&nbsp;
         NIF : 49761L &nbsp;|&nbsp; RCCM : GA-LBV-01-2020-B12-00179
         <br/>
