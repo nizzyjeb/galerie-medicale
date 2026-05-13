@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import { useAuth } from '../hooks/useAuth'
 
 export default function FactureModal({ type = 'facture', onClose, onSaved }) {
-  const { user } = useAuth()
+  const { user, profile, isAdmin } = useAuth()
   const [produits, setProduits] = useState([])
   const [loading, setSaving] = useState(false)
   const [form, setForm] = useState({
@@ -57,6 +57,12 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
     const prefix = type === 'facture' ? 'FACT' : 'PF'
     const numero = `${prefix}-${String((count || 0) + 1).padStart(3, '0')}-${new Date().getFullYear()}`
 
+    // ★ NOUVEAU : Logique de validation selon le rôle
+    // - Pro forma : jamais validée (valide = false)
+    // - Facture créée par admin : automatiquement validée
+    // - Facture créée par comptable : en attente de validation
+    const estFactureValidee = type === 'facture' && isAdmin
+    
     const factureData = {
       numero, type,
       client_nom: form.client_nom,
@@ -74,6 +80,10 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
       total_ttc: totaux.ttc,
       statut: type === 'facture' ? 'attente' : 'en_cours',
       created_by: user.id,
+      // ★ NOUVEAU : Champs de validation
+      valide: estFactureValidee,
+      valide_par: estFactureValidee ? user.id : null,
+      date_validation: estFactureValidee ? new Date().toISOString() : null,
     }
 
     const { data: facture, error } = await supabase.from('factures').insert(factureData).select().single()
@@ -90,7 +100,14 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
     }))
 
     await supabase.from('facture_lignes').insert(lignesData)
-    toast.success(`${type === 'facture' ? 'Facture' : 'Pro Forma'} ${numero} créée !`)
+    
+    // ★ NOUVEAU : Message adapté selon validation
+    if (type === 'facture' && !isAdmin) {
+      toast.success(`Facture ${numero} créée ! En attente de validation par un administrateur.`)
+    } else {
+      toast.success(`${type === 'facture' ? 'Facture' : 'Pro Forma'} ${numero} créée !`)
+    }
+    
     setSaving(false)
     onSaved?.()
     onClose()
@@ -104,6 +121,17 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:18, cursor:'pointer', color:'var(--gray)' }}>✕</button>
         </div>
         <div className="modal-body">
+          {/* ★ NOUVEAU : Bandeau d'avertissement pour le comptable créant une facture */}
+          {type === 'facture' && !isAdmin && profile?.role === 'comptable' && (
+            <div style={{
+              padding: '10px 14px', marginBottom: 16, borderRadius: 8,
+              background: '#fff7ed', border: '1px solid #fed7aa', color: '#9a3412',
+              fontSize: 13
+            }}>
+              ⚠️ Cette facture sera créée <strong>en attente de validation</strong>. Seul un administrateur peut la valider définitivement.
+            </div>
+          )}
+
           <div className="form-grid form-grid-2 mb-4">
             <div className="form-group">
               <label>Nom / Raison sociale *</label>
