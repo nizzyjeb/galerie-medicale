@@ -10,7 +10,7 @@ import EditFactureModal from '../components/EditFactureModal'
 import toast from 'react-hot-toast'
 
 export default function Factures() {
-  const { isAdmin } = useAuth()
+  const { user, profile, isAdmin } = useAuth()
   const [factures, setFactures] = useState([])
   const [filter, setFilter] = useState('all')
   const [showModal, setShowModal] = useState(false)
@@ -38,6 +38,26 @@ export default function Factures() {
     toast.success('Statut mis à jour')
   }
 
+  // ★ NOUVEAU : Validation d'une facture par l'admin uniquement
+  const validerFacture = async (id, numero) => {
+    if (!window.confirm(`Valider définitivement la facture ${numero} ?\n\nUne fois validée, elle ne pourra plus être modifiée par le comptable.\nCette action est irréversible.`)) return
+
+    const { error } = await supabase
+      .from('factures')
+      .update({
+        valide: true,
+        valide_par: user.id,
+        date_validation: new Date().toISOString()
+      })
+      .eq('id', id)
+
+    if (error) {
+      toast.error('Erreur : ' + error.message)
+    } else {
+      toast.success(`Facture ${numero} validée ✓`)
+      fetchFactures()
+    }
+  }
 
   const deleteFacture = async (id, numero) => {
     if (!window.confirm(`Supprimer définitivement la facture ${numero} ? Cette action est irréversible.`)) return
@@ -54,6 +74,11 @@ export default function Factures() {
       items: [
         { icon: '👁', label: 'Aperçu / Imprimer', action: () => openPreview(f) },
         { icon: '✏️', label: 'Modifier', action: () => setEditDoc(f) },
+        // ★ NOUVEAU : Option Valider dans le menu contextuel (admin + non validée)
+        ...(isAdmin && !f.valide ? [
+          'divider',
+          { icon: '✓', label: 'Valider définitivement', action: () => validerFacture(f.id, f.numero) }
+        ] : []),
         'divider',
         { icon: '💰', label: 'Marquer Payée', action: () => changeStatut(f.id, 'payee') },
         { icon: '⏳', label: 'Marquer En attente', action: () => changeStatut(f.id, 'attente') },
@@ -93,17 +118,28 @@ export default function Factures() {
         ))}
       </div>
 
+      {/* ★ NOUVEAU : Bandeau d'info pour le comptable */}
+      {!isAdmin && profile?.role === 'comptable' && (
+        <div style={{
+          padding: '10px 14px', marginBottom: 16, borderRadius: 8,
+          background: '#fff7ed', border: '1px solid #fed7aa', color: '#9a3412',
+          fontSize: 13
+        }}>
+          ℹ️ Les factures que vous créez doivent être validées par un administrateur pour devenir définitives.
+        </div>
+      )}
+
       <div className="card">
         <div className="table-wrap">
           <table>
             <thead>
-              <tr><th>N°</th><th>Client</th><th>Objet</th><th>Émission</th><th>Échéance</th><th>HT</th><th>TTC</th><th>Statut</th><th>Actions</th></tr>
+              <tr><th>N°</th><th>Client</th><th>Objet</th><th>Émission</th><th>Échéance</th><th>HT</th><th>TTC</th><th>Validation</th><th>Statut</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Chargement...</td></tr>
+                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Chargement...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Aucune facture</td></tr>
+                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Aucune facture</td></tr>
               ) : filtered.map(f => {
                 const st = STATUTS_FACTURE[f.statut] || STATUTS_FACTURE.attente
                 return (
@@ -115,11 +151,33 @@ export default function Factures() {
                     <td style={{ color: f.statut === 'retard' ? 'var(--danger)' : 'var(--gray)' }}>{fmtDate(f.date_echeance)}</td>
                     <td className="font-mono">{fmt(f.base_ht)}</td>
                     <td className="font-mono" style={{ fontWeight: 600 }}>{fmt(f.total_ttc)}</td>
+                    {/* ★ NOUVEAU : Colonne Validation */}
+                    <td>
+                      {f.valide ? (
+                        <span className="badge" style={{ background: '#dcfce7', color: '#166534' }}>✓ Validée</span>
+                      ) : (
+                        <span className="badge" style={{ background: '#fed7aa', color: '#9a3412' }}>⏳ En attente</span>
+                      )}
+                    </td>
                     <td><span className="badge" style={{ background: st.bg, color: st.color }}>{st.label}</span></td>
                     <td>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         <button className="btn btn-ghost btn-sm" onClick={() => openPreview(f)}>👁 Aperçu</button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => setEditDoc(f)}>✏️ Modifier</button>
+                        {/* Modifier : admin toujours, comptable seulement si non validée */}
+                        {(isAdmin || !f.valide) && (
+                          <button className="btn btn-ghost btn-sm" onClick={() => setEditDoc(f)}>✏️ Modifier</button>
+                        )}
+                        {/* ★ NOUVEAU : Bouton Valider - admin uniquement, facture non validée */}
+                        {isAdmin && !f.valide && (
+                          <button
+                            className="btn btn-sm"
+                            style={{ background: '#16a34a', color: 'white', border: 'none', fontWeight: 600 }}
+                            onClick={() => validerFacture(f.id, f.numero)}
+                            title="Valider définitivement cette facture"
+                          >
+                            ✓ Valider
+                          </button>
+                        )}
                         {isAdmin && (
                           <button className="btn btn-danger btn-sm" onClick={() => deleteFacture(f.id, f.numero)}>🗑 Suppr.</button>
                         )}
