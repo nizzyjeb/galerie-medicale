@@ -7,8 +7,8 @@ import toast from 'react-hot-toast'
 // CONFIGURATION GALERIE MÉDICALE
 // Modifiez ces valeurs si la zone change
 // ═══════════════════════════════════════════════════════════════
-const GALERIE_LAT = 0.44337912049325345
-const GALERIE_LNG = 9.416777001844155
+const GALERIE_LAT = 0.44040310295785134
+const GALERIE_LNG = 9.417844746414207
 const RAYON_AUTORISE_M = 100      // 100 mètres autour de la Galerie
 const HEURE_STANDARD = '08:00'    // Au-delà = retard
 
