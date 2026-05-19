@@ -201,7 +201,7 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
         /* ─── IMPRESSION ─── */
         @page {
           size: A4;
-          margin: 0;
+          margin: 10mm 8mm;
         }
         @media print {
           html, body {
@@ -216,17 +216,27 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
           #print-root {
             position: absolute;
             left: 0; top: 0;
-            width: 210mm;
+            width: 100%;
             margin: 0;
             padding: 0;
           }
           .doc {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 8mm 10mm;
+            width: 100% !important;
+            min-height: calc(297mm - 20mm) !important;
+            height: calc(297mm - 20mm) !important;
+            padding: 0 !important;
             box-shadow: none !important;
             page-break-after: avoid;
             page-break-inside: avoid;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          .doc-footer {
+            margin-top: auto !important;
+          }
+          .signatures {
+            margin-top: auto !important;
+            padding-top: 20px;
           }
           .preview-actions, .no-print {
             display: none !important;
