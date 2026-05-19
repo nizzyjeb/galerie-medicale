@@ -201,29 +201,32 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
         /* ─── IMPRESSION ─── */
         @page {
           size: A4;
-          margin: 10mm 8mm;
+          margin: 12mm 10mm;
         }
         @media print {
           html, body {
             margin: 0 !important;
             padding: 0 !important;
             background: white !important;
+            height: auto !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
           body * { visibility: hidden !important; }
           #print-root, #print-root * { visibility: visible !important; }
           #print-root {
-            position: absolute;
-            left: 0; top: 0;
-            width: 100%;
-            margin: 0;
-            padding: 0;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
           .doc {
             width: 100% !important;
-            min-height: calc(297mm - 20mm) !important;
-            height: calc(297mm - 20mm) !important;
+            min-height: 273mm !important;
             padding: 0 !important;
             box-shadow: none !important;
             page-break-after: avoid;
@@ -231,12 +234,23 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
             display: flex !important;
             flex-direction: column !important;
           }
-          .doc-footer {
-            margin-top: auto !important;
-          }
+          /* Pousser les signatures et le footer vers le bas */
           .signatures {
             margin-top: auto !important;
-            padding-top: 20px;
+            padding-top: 30px !important;
+          }
+          .doc-footer {
+            margin-top: 12px !important;
+          }
+          /* Espacer un peu plus les blocs intermédiaires */
+          table.prestations {
+            margin-bottom: 12px !important;
+          }
+          .totaux {
+            margin-bottom: 14px !important;
+          }
+          .conditions {
+            margin-top: 14px !important;
           }
           .preview-actions, .no-print {
             display: none !important;
