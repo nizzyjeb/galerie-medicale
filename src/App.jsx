@@ -9,6 +9,8 @@ import BonsLivraison from './pages/BonsLivraison'
 import Produits from './pages/Produits'
 import Utilisateurs from './pages/Utilisateurs'
 import Parametres from './pages/Parametres'
+import Pointage from './pages/Pointage'
+import Presences from './pages/Presences'
 
 function ProtectedRoute({ children, adminOnly = false, comptableOnly = false }) {
   const { user, profile, loading } = useAuth()
@@ -31,6 +33,8 @@ export default function App() {
         <Route path="factures" element={<ProtectedRoute comptableOnly><Factures /></ProtectedRoute>} />
         <Route path="proforma" element={<ProtectedRoute comptableOnly><ProForma /></ProtectedRoute>} />
         <Route path="livraison" element={<BonsLivraison />} />
+        <Route path="pointage" element={<Pointage />} />
+        <Route path="presences" element={<ProtectedRoute adminOnly><Presences /></ProtectedRoute>} />
         <Route path="produits" element={<ProtectedRoute comptableOnly><Produits /></ProtectedRoute>} />
         <Route path="utilisateurs" element={<ProtectedRoute adminOnly><Utilisateurs /></ProtectedRoute>} />
         <Route path="parametres" element={<ProtectedRoute adminOnly><Parametres /></ProtectedRoute>} />

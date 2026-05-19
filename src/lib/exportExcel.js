@@ -3,6 +3,7 @@
 
 const fmtNum = (n) => Math.round(n || 0).toLocaleString('fr-FR')
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : ''
+const fmtHeure = (d) => d ? new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''
 
 function downloadCSV(filename, rows) {
   const BOM = '\uFEFF' // BOM UTF-8 pour Excel
@@ -109,4 +110,128 @@ export function exportRegistreExcel(factures) {
   rows.push([`Registre exporté le ${new Date().toLocaleDateString('fr-FR')} — Galerie Médicale SAJ Groupe`])
 
   downloadCSV(filename, [header, ...rows])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT PRÉSENCES (Pointage employés)
+// ═══════════════════════════════════════════════════════════════
+export function exportPresencesExcel(profils, pointages, periode, vue) {
+  const filename = `Presences_${periode}_${new Date().toISOString().split('T')[0]}.csv`
+
+  if (vue === 'jour') {
+    // Vue d'un jour : une ligne par employé
+    const parUser = {}
+    pointages.forEach(p => {
+      if (!parUser[p.user_id]) parUser[p.user_id] = {}
+      parUser[p.user_id][p.type] = p
+    })
+
+    const header = [
+      'Employé', 'Rôle', 'Arrivée', 'Retard (min)',
+      'Départ', 'Heures travaillées', 'Statut', 'Distance (m)'
+    ]
+
+    const rows = profils.map(prof => {
+      const a = parUser[prof.id]?.arrivee
+      const d = parUser[prof.id]?.depart
+      let heures = ''
+      if (a && d) {
+        const ms = new Date(d.heure) - new Date(a.heure)
+        const h = Math.floor(ms / 3600000)
+        const m = Math.floor((ms % 3600000) / 60000)
+        heures = `${h}h ${String(m).padStart(2, '0')}`
+      }
+      return [
+        prof.full_name || prof.email,
+        prof.role,
+        fmtHeure(a?.heure),
+        a?.retard_minutes || 0,
+        fmtHeure(d?.heure),
+        heures,
+        !a ? 'Absent' : d ? 'Parti' : 'Présent',
+        a?.distance_metres || ''
+      ]
+    })
+
+    // Stats
+    const present = profils.filter(p => parUser[p.id]?.arrivee).length
+    const absent = profils.length - present
+    const retards = profils.filter(p => (parUser[p.id]?.arrivee?.retard_minutes || 0) > 0).length
+
+    rows.push([])
+    rows.push(['=== RÉCAPITULATIF ==='])
+    rows.push(['Date', fmtDate(periode)])
+    rows.push(['Total employés', profils.length])
+    rows.push(['Présents', present])
+    rows.push(['Absents', absent])
+    rows.push(['Retards', retards])
+    rows.push([])
+    rows.push([`Exporté le ${new Date().toLocaleDateString('fr-FR')} — Galerie Médicale SAJ Groupe`])
+
+    downloadCSV(filename, [header, ...rows])
+  } else {
+    // Vue mois : récap par employé + détail jour par jour
+    const recap = {}
+    profils.forEach(prof => {
+      recap[prof.id] = { profil: prof, jours: {}, presents: 0, retards: 0, minutesRetard: 0 }
+    })
+    pointages.forEach(p => {
+      if (!recap[p.user_id]) return
+      if (!recap[p.user_id].jours[p.date_jour]) recap[p.user_id].jours[p.date_jour] = {}
+      recap[p.user_id].jours[p.date_jour][p.type] = p
+    })
+    Object.values(recap).forEach(r => {
+      Object.values(r.jours).forEach(j => {
+        if (j.arrivee) {
+          r.presents++
+          if (j.arrivee.retard_minutes > 0) {
+            r.retards++
+            r.minutesRetard += j.arrivee.retard_minutes
+          }
+        }
+      })
+    })
+
+    // En-tête récap
+    const headerRecap = ['Employé', 'Rôle', 'Jours présents', 'Retards', 'Total minutes retard']
+    const rowsRecap = Object.values(recap).map(r => [
+      r.profil.full_name || r.profil.email,
+      r.profil.role,
+      r.presents,
+      r.retards,
+      r.minutesRetard
+    ])
+
+    // Détail jour par jour
+    const headerDetail = ['Date', 'Employé', 'Arrivée', 'Retard (min)', 'Départ']
+    const rowsDetail = []
+    Object.values(recap).forEach(r => {
+      Object.entries(r.jours).sort(([a], [b]) => a.localeCompare(b)).forEach(([date, j]) => {
+        rowsDetail.push([
+          fmtDate(date),
+          r.profil.full_name || r.profil.email,
+          fmtHeure(j.arrivee?.heure),
+          j.arrivee?.retard_minutes || 0,
+          fmtHeure(j.depart?.heure)
+        ])
+      })
+    })
+
+    const allRows = [
+      [`=== RÉCAPITULATIF DU MOIS ${periode} ===`],
+      [],
+      headerRecap,
+      ...rowsRecap,
+      [],
+      [],
+      ['=== DÉTAIL JOUR PAR JOUR ==='],
+      [],
+      headerDetail,
+      ...rowsDetail,
+      [],
+      [`Exporté le ${new Date().toLocaleDateString('fr-FR')} — Galerie Médicale SAJ Groupe`]
+    ]
+
+    downloadCSV(filename, allRows)
+  }
 }

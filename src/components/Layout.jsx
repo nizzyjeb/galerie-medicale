@@ -12,6 +12,9 @@ const navItems = [
   { to: '/livraison', label: 'Bons de livraison', icon: 'truck' },
   { section: 'Catalogue' },
   { to: '/produits', label: 'Base produits', icon: 'package', roles: ['admin','comptable'] },
+  { section: 'Ressources Humaines' },
+  { to: '/pointage', label: 'Pointage', icon: 'clock' },
+  { to: '/presences', label: 'Présences', icon: 'user-check', roles: ['admin'] },
   { section: 'Administration' },
   { to: '/utilisateurs', label: 'Utilisateurs', icon: 'users', roles: ['admin'] },
   { to: '/parametres', label: 'Paramètres', icon: 'settings', roles: ['admin'] },
@@ -26,6 +29,8 @@ const Icon = ({ name }) => {
     package: <><path d="M8 1l7 4v6l-7 4-7-4V5z"/><path d="M8 1v14M1 5l7 4 7-4"/></>,
     users: <><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2-5 5-5s5 2 5 5"/><circle cx="13" cy="7" r="2"/><path d="M11 14c0-2 .9-3 2-3"/></>,
     settings: <><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3"/></>,
+    clock: <><circle cx="8" cy="8" r="7"/><path d="M8 4v4l2.5 2"/></>,
+    'user-check': <><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2-5 5-5s5 2 5 5"/><path d="M11 7l1.5 1.5L15 6"/></>,
   }
   return <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">{icons[name]}</svg>
 }
