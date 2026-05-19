@@ -234,13 +234,14 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
             display: flex !important;
             flex-direction: column !important;
           }
-          /* Pousser les signatures et le footer vers le bas */
+          /* Pousser le pied de page tout en bas de la feuille */
           .signatures {
-            margin-top: auto !important;
-            padding-top: 30px !important;
+            margin-top: 30px !important;
+            padding-top: 10px !important;
           }
           .doc-footer {
-            margin-top: 12px !important;
+            margin-top: auto !important;
+            padding-top: 12px !important;
           }
           /* Espacer un peu plus les blocs intermédiaires */
           table.prestations {
