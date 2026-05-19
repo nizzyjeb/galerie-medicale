@@ -208,31 +208,38 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
             margin: 0 !important;
             padding: 0 !important;
             background: white !important;
-            height: auto !important;
+            width: 100% !important;
+            height: 100% !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
           body * { visibility: hidden !important; }
           #print-root, #print-root * { visibility: visible !important; }
           #print-root {
-            position: absolute !important;
+            position: fixed !important;
             left: 0 !important;
             top: 0 !important;
             right: 0 !important;
+            bottom: 0 !important;
             width: 100% !important;
-            height: auto !important;
+            height: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
           }
           .doc {
             width: 100% !important;
-            min-height: 273mm !important;
+            height: 100% !important;
+            min-height: 100% !important;
             padding: 0 !important;
+            margin: 0 !important;
             box-shadow: none !important;
-            page-break-after: avoid;
-            page-break-inside: avoid;
             display: flex !important;
             flex-direction: column !important;
+            flex: 1 1 auto !important;
+            page-break-after: avoid;
+            page-break-inside: avoid;
           }
           /* Pousser le pied de page tout en bas de la feuille */
           .signatures {
@@ -243,7 +250,7 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
             margin-top: auto !important;
             padding-top: 12px !important;
           }
-          /* Espacer un peu plus les blocs intermédiaires */
+          /* Espacement modéré entre les blocs */
           table.prestations {
             margin-bottom: 12px !important;
           }
@@ -261,11 +268,17 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
             background: white !important;
             padding: 0 !important;
             overflow: visible !important;
+            display: block !important;
+            height: 100% !important;
           }
           .preview-container {
             max-width: none !important;
             margin: 0 !important;
+            padding: 0 !important;
             box-shadow: none !important;
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
           }
           .unite-select {
             border: none !important;
