@@ -228,8 +228,19 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
             page-break-after: avoid;
             page-break-inside: avoid;
           }
-          .preview-overlay, .preview-actions, .no-print {
+          .preview-actions, .no-print {
             display: none !important;
+          }
+          .preview-overlay {
+            position: static !important;
+            background: white !important;
+            padding: 0 !important;
+            overflow: visible !important;
+          }
+          .preview-container {
+            max-width: none !important;
+            margin: 0 !important;
+            box-shadow: none !important;
           }
           .unite-select {
             border: none !important;
@@ -249,8 +260,8 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
         }
       `}</style>
 
-      <div className="preview-overlay no-print">
-        <div className="preview-actions">
+      <div className="preview-overlay">
+        <div className="preview-actions no-print">
           <span style={{ fontWeight: 600 }}>Aperçu — {titre} {numero}</span>
           <div>
             <button onClick={handlePrint}>🖨 Imprimer</button>
