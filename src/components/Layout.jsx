@@ -1,6 +1,8 @@
 import LOGO_BASE64 from '../lib/logo.js'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.jsx'
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
 const navItems = [
@@ -12,6 +14,8 @@ const navItems = [
   { to: '/livraison', label: 'Bons de livraison', icon: 'truck' },
   { section: 'Catalogue' },
   { to: '/produits', label: 'Base produits', icon: 'package', roles: ['admin','comptable'] },
+  { section: 'Communication' },
+  { to: '/chat', label: 'Tchat', icon: 'chat', badge: 'chat' },
   { section: 'Ressources Humaines' },
   { to: '/pointage', label: 'Pointage', icon: 'clock' },
   { to: '/presences', label: 'Présences', icon: 'user-check', roles: ['admin'] },
@@ -31,13 +35,72 @@ const Icon = ({ name }) => {
     settings: <><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3"/></>,
     clock: <><circle cx="8" cy="8" r="7"/><path d="M8 4v4l2.5 2"/></>,
     'user-check': <><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2-5 5-5s5 2 5 5"/><path d="M11 7l1.5 1.5L15 6"/></>,
+    chat: <><path d="M14 9c0 .5-.2 1-.6 1.4l-1 .9C12 11.7 11.5 12 11 12H6l-3 2.5V4c0-.6.4-1 1-1h9c.6 0 1 .4 1 1v5z"/></>,
   }
   return <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">{icons[name]}</svg>
 }
 
 export default function Layout() {
-  const { profile, signOut, isAdmin } = useAuth()
+  const { user, profile, signOut, isAdmin } = useAuth()
   const navigate = useNavigate()
+  const [nonLus, setNonLus] = useState(0)
+
+  // Compter les messages non lus du chat
+  useEffect(() => {
+    if (!user) return
+
+    const charger = async () => {
+      // Récupérer la dernière lecture
+      const { data: lecture } = await supabase
+        .from('chat_lectures')
+        .select('derniere_lecture')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      const derniereLecture = lecture?.derniere_lecture || '1970-01-01'
+
+      // Compter les messages plus récents (et qui ne sont pas de l'utilisateur)
+      const { count } = await supabase
+        .from('chat_messages')
+        .select('*', { count: 'exact', head: true })
+        .gt('created_at', derniereLecture)
+        .neq('user_id', user.id)
+
+      setNonLus(count || 0)
+    }
+
+    charger()
+
+    // S'abonner aux nouveaux messages en temps réel
+    const channel = supabase
+      .channel('layout-chat-badge')
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+        (payload) => {
+          // Si ce n'est pas mon message et qu'on n'est pas sur la page chat
+          if (payload.new.user_id !== user.id && !window.location.pathname.includes('/chat')) {
+            setNonLus(n => n + 1)
+          }
+        }
+      )
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'chat_lectures', filter: `user_id=eq.${user.id}` },
+        () => charger()
+      )
+      .subscribe()
+
+    // Reset le compteur quand on arrive sur /chat
+    const handleLocation = () => {
+      if (window.location.pathname.includes('/chat')) setNonLus(0)
+    }
+    window.addEventListener('popstate', handleLocation)
+    handleLocation()
+
+    return () => {
+      supabase.removeChannel(channel)
+      window.removeEventListener('popstate', handleLocation)
+    }
+  }, [user])
 
   const handleSignOut = async () => {
     await signOut()
@@ -73,16 +136,28 @@ export default function Layout() {
             return (
               <NavLink
                 key={item.to} to={item.to} end={item.exact}
+                onClick={() => { if (item.badge === 'chat') setNonLus(0) }}
                 style={({ isActive }) => ({
                   display: 'flex', alignItems: 'center', gap: 10, padding: '8px 18px',
                   color: isActive ? '#fff' : 'rgba(255,255,255,.55)', fontSize: 13,
                   borderLeft: isActive ? '3px solid var(--teal)' : '3px solid transparent',
                   background: isActive ? 'rgba(26,158,143,.15)' : 'transparent',
-                  transition: 'all .15s', textDecoration: 'none'
+                  transition: 'all .15s', textDecoration: 'none',
+                  position: 'relative'
                 })}
               >
                 <Icon name={item.icon} />
-                {item.label}
+                <span style={{ flex: 1 }}>{item.label}</span>
+                {item.badge === 'chat' && nonLus > 0 && (
+                  <span style={{
+                    background: '#ef4444', color: 'white',
+                    fontSize: 10, fontWeight: 700,
+                    padding: '2px 7px', borderRadius: 10,
+                    minWidth: 18, textAlign: 'center'
+                  }}>
+                    {nonLus > 99 ? '99+' : nonLus}
+                  </span>
+                )}
               </NavLink>
             )
           })}

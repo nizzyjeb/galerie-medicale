@@ -11,6 +11,7 @@ import Utilisateurs from './pages/Utilisateurs'
 import Parametres from './pages/Parametres'
 import Pointage from './pages/Pointage'
 import Presences from './pages/Presences'
+import Chat from './pages/Chat'
 
 function ProtectedRoute({ children, adminOnly = false, comptableOnly = false }) {
   const { user, profile, loading } = useAuth()
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="livraison" element={<BonsLivraison />} />
         <Route path="pointage" element={<Pointage />} />
         <Route path="presences" element={<ProtectedRoute adminOnly><Presences /></ProtectedRoute>} />
+        <Route path="chat" element={<Chat />} />
         <Route path="produits" element={<ProtectedRoute comptableOnly><Produits /></ProtectedRoute>} />
         <Route path="utilisateurs" element={<ProtectedRoute adminOnly><Utilisateurs /></ProtectedRoute>} />
         <Route path="parametres" element={<ProtectedRoute adminOnly><Parametres /></ProtectedRoute>} />
