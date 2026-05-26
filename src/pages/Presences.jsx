@@ -35,7 +35,7 @@ export default function Presences() {
   const chargerJour = async () => {
     setLoading(true)
     const [{ data: profs }, { data: pts }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, email, role').order('full_name'),
+      supabase.from('profiles').select('id, nom, email, role').order('nom'),
       supabase.from('pointages').select('*').eq('date_jour', dateSelectionnee).order('heure')
     ])
     setTousProfils(profs || [])
@@ -51,7 +51,7 @@ export default function Presences() {
     const fin = finDate.toISOString().split('T')[0]
 
     const [{ data: profs }, { data: pts }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, email, role').order('full_name'),
+      supabase.from('profiles').select('id, nom, email, role').order('nom'),
       supabase.from('pointages').select('*').gte('date_jour', debut).lt('date_jour', fin).order('date_jour, heure')
     ])
     setTousProfils(profs || [])
@@ -131,7 +131,7 @@ export default function Presences() {
                   const d = data.depart
                   return (
                     <tr key={prof.id}>
-                      <td style={{ fontWeight: 500 }}>{prof.full_name || prof.email}</td>
+                      <td style={{ fontWeight: 500 }}>{prof.nom || prof.email}</td>
                       <td style={{ color: 'var(--gray)', textTransform: 'capitalize' }}>{prof.role}</td>
                       <td className="font-mono">{a ? fmtHeure(a.heure) : '—'}</td>
                       <td>
@@ -218,7 +218,7 @@ export default function Presences() {
                 <tr><td colSpan={5} style={{ textAlign: 'center', padding: 30, color: 'var(--gray)' }}>Chargement...</td></tr>
               ) : Object.values(recap).map(r => (
                 <tr key={r.profil.id}>
-                  <td style={{ fontWeight: 500 }}>{r.profil.full_name || r.profil.email}</td>
+                  <td style={{ fontWeight: 500 }}>{r.profil.nom || r.profil.email}</td>
                   <td style={{ color: 'var(--gray)', textTransform: 'capitalize' }}>{r.profil.role}</td>
                   <td style={{ textAlign: 'center', fontWeight: 600 }}>{r.totalJoursPresents}</td>
                   <td style={{ textAlign: 'center' }}>

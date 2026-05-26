@@ -106,12 +106,28 @@ export default function Chat() {
     setLoading(true)
 
     // Charger profils
-    const { data: profsData } = await supabase
+    const { data: profsData, error: profsError } = await supabase
       .from('profiles')
-      .select('id, full_name, email, role, nom')
+      .select('id, nom, email, role')
+
+    if (profsError) {
+      console.error('Erreur chargement profils:', profsError)
+      toast.error('Impossible de charger les profils : ' + profsError.message)
+    }
 
     const profsMap = {}
     ;(profsData || []).forEach(p => { profsMap[p.id] = p })
+
+    // Fallback : toujours inclure mon propre profil (sécurité supplémentaire)
+    if (profile && user && !profsMap[user.id]) {
+      profsMap[user.id] = {
+        id: user.id,
+        nom: profile.nom,
+        email: profile.email,
+        role: profile.role
+      }
+    }
+
     setProfils(profsMap)
 
     // Charger messages (200 derniers, ordre chronologique pour affichage)
@@ -145,7 +161,7 @@ export default function Chat() {
           if (!profils[newMsg.user_id]) {
             const { data: p } = await supabase
               .from('profiles')
-              .select('id, full_name, email, role, nom')
+              .select('id, nom, email, role')
               .eq('id', newMsg.user_id)
               .single()
             if (p) setProfils(prev => ({ ...prev, [p.id]: p }))
@@ -185,7 +201,7 @@ export default function Chat() {
   // Notifier nouveau message (son + notification navigateur + toast)
   // ═══════════════════════════════════════════════════════════════
   const notifierNouveauMessage = (msg) => {
-    const auteur = profils[msg.user_id]?.full_name || profils[msg.user_id]?.nom || profils[msg.user_id]?.email || 'Quelqu\'un'
+    const auteur = profils[msg.user_id]?.nom || profils[msg.user_id]?.email || 'Quelqu\'un'
 
     // Son
     if (sonActif) playNotificationSound()
@@ -346,7 +362,7 @@ export default function Chat() {
             const auteur = profils[msg.user_id]
             const estMoi = msg.user_id === user.id
             const peutSupprimer = estMoi || isAdmin
-            const nomAuteur = auteur?.full_name || auteur?.nom || auteur?.email || 'Inconnu'
+            const nomAuteur = auteur?.nom || auteur?.email || 'Inconnu'
             const memeAuteurPrecedent = i > 0 && messages[i - 1].user_id === msg.user_id &&
               (new Date(msg.created_at) - new Date(messages[i - 1].created_at)) < 5 * 60 * 1000
 
