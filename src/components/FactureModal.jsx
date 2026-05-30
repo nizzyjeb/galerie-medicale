@@ -53,17 +53,36 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
     if (lignesValides.length === 0) { toast.error('Ajoutez au moins une prestation'); return }
     setSaving(true)
 
-    const { count } = await supabase.from('factures').select('*', { count:'exact', head:true }).eq('type', type)
     const prefix = type === 'facture' ? 'FACT' : 'PF'
-    const numero = `${prefix}-${String((count || 0) + 1).padStart(3, '0')}-${new Date().getFullYear()}`
+    const annee = new Date().getFullYear()
 
-    // ★ NOUVEAU : Logique de validation selon le rôle
+    // ★ CORRECTIF : calcule le prochain numéro à partir du PLUS GRAND numéro
+    // réellement existant (et non du nombre de lignes). Robuste aux suppressions.
+    const prochainNumero = async () => {
+      const { data: existants } = await supabase
+        .from('factures')
+        .select('numero')
+        .eq('type', type)
+        .like('numero', `${prefix}-%-${annee}`)
+      let maxSeq = 0
+      const regex = new RegExp(`^${prefix}-(\\d+)-${annee}$`)
+      for (const row of (existants || [])) {
+        const m = row.numero?.match(regex)
+        if (m) {
+          const n = parseInt(m[1], 10)
+          if (n > maxSeq) maxSeq = n
+        }
+      }
+      return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}-${annee}`
+    }
+
+    // ★ Logique de validation selon le rôle
     // - Pro forma : jamais validée (valide = false)
     // - Facture créée par admin : automatiquement validée
     // - Facture créée par comptable : en attente de validation
     const estFactureValidee = type === 'facture' && isAdmin
-    
-    const factureData = {
+
+    const construireData = (numero) => ({
       numero, type,
       client_nom: form.client_nom,
       client_adresse: form.client_adresse,
@@ -80,14 +99,30 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
       total_ttc: totaux.ttc,
       statut: type === 'facture' ? 'attente' : 'en_cours',
       created_by: user.id,
-      // ★ NOUVEAU : Champs de validation
       valide: estFactureValidee,
       valide_par: estFactureValidee ? user.id : null,
       date_validation: estFactureValidee ? new Date().toISOString() : null,
+    })
+
+    // ★ CORRECTIF : insertion avec jusqu'à 5 tentatives en cas de collision de
+    // numéro (code 23505) — utile si deux personnes créent un document en même temps.
+    let facture = null
+    let derniereErreur = null
+    for (let essai = 0; essai < 5; essai++) {
+      const numero = await prochainNumero()
+      const { data, error } = await supabase.from('factures').insert(construireData(numero)).select().single()
+      if (!error) { facture = data; break }
+      derniereErreur = error
+      if (error.code !== '23505') break // autre erreur que doublon → on arrête
+      // sinon : numéro pris entre-temps, on recalcule et on réessaie
     }
 
-    const { data: facture, error } = await supabase.from('factures').insert(factureData).select().single()
-    if (error) { toast.error('Erreur lors de la sauvegarde'); setSaving(false); return }
+    if (!facture) {
+      console.error('Erreur sauvegarde facture :', derniereErreur)
+      toast.error('Erreur lors de la sauvegarde')
+      setSaving(false)
+      return
+    }
 
     const lignesData = lignesValides.map((l, i) => ({
       facture_id: facture.id,
@@ -100,12 +135,12 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
     }))
 
     await supabase.from('facture_lignes').insert(lignesData)
-    
-    // ★ NOUVEAU : Message adapté selon validation
+
+    // Message adapté selon validation
     if (type === 'facture' && !isAdmin) {
-      toast.success(`Facture ${numero} créée ! En attente de validation par un administrateur.`)
+      toast.success(`Facture ${facture.numero} créée ! En attente de validation par un administrateur.`)
     } else {
-      toast.success(`${type === 'facture' ? 'Facture' : 'Pro Forma'} ${numero} créée !`)
+      toast.success(`${type === 'facture' ? 'Facture' : 'Pro Forma'} ${facture.numero} créée !`)
     }
     
     setSaving(false)
