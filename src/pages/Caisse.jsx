@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import LOGO_BASE64 from '../lib/logo.js'
 
 /* -------- Catégories (modifiables librement) -------- */
 const CATEGORIES_ENTREE = [
@@ -35,6 +36,20 @@ const frDate = (s) => {
   if (!s) return ''
   const [y, m, d] = s.split('-')
   return `${d}/${m}/${y}`
+}
+
+// Échappe le texte pour l'injection HTML du reçu
+const esc = (s) =>
+  String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+
+// Numéro de pièce lisible à partir de l'ID du mouvement, ex: PC-20260602-A1B2
+const numeroPiece = (m) => {
+  const d = (m.date_mouvement || '').replace(/-/g, '')
+  const suffix = String(m.id || '').replace(/-/g, '').slice(0, 4).toUpperCase()
+  return `PC-${d}-${suffix}`
 }
 
 export default function Caisse() {
@@ -270,6 +285,90 @@ export default function Caisse() {
     URL.revokeObjectURL(url)
   }
 
+  const imprimerRecu = (m) => {
+    const w = window.open('', '_blank', 'width=900,height=1000')
+    if (!w) {
+      toast.error('Autorise les fenêtres pop-up pour imprimer')
+      return
+    }
+    const estEntree = m.type === 'entree'
+    const titre = estEntree ? 'REÇU DE CAISSE' : 'PIÈCE DE DÉPENSE'
+    const heure = m.created_at
+      ? new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      : ''
+    const teal = '#1A9E8F'
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<title>${esc(numeroPiece(m))}</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #1f2937; }
+  .page { width: 210mm; min-height: 297mm; padding: 22mm 20mm; margin: 0 auto; position: relative; }
+  .entete { display: flex; align-items: center; gap: 16px; border-bottom: 3px solid ${teal}; padding-bottom: 16px; }
+  .entete img { width: 80px; height: 80px; object-fit: contain; }
+  .soc-nom { font-size: 22px; font-weight: 700; color: ${teal}; }
+  .soc-info { font-size: 12px; color: #4b5563; line-height: 1.5; margin-top: 4px; }
+  .titre-bloc { text-align: center; margin: 34px 0 10px; }
+  .titre { display: inline-block; font-size: 20px; font-weight: 700; letter-spacing: 2px; color: #fff; background: ${teal}; padding: 8px 26px; border-radius: 6px; }
+  .num { text-align: center; font-size: 13px; color: #6b7280; margin-bottom: 28px; }
+  table.det { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  table.det td { padding: 11px 14px; border: 1px solid #e5e7eb; font-size: 14px; }
+  table.det td.lbl { background: #f9fafb; font-weight: 600; width: 35%; color: #374151; }
+  .montant-bloc { margin-top: 30px; text-align: center; border: 2px solid ${teal}; border-radius: 10px; padding: 18px; background: #f0fdfa; }
+  .montant-lbl { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; }
+  .montant-val { font-size: 32px; font-weight: 800; color: ${teal}; margin-top: 6px; }
+  .sign { margin-top: 60px; display: flex; justify-content: flex-end; }
+  .sign-box { width: 70mm; text-align: center; }
+  .sign-line { border-top: 1px solid #374151; margin-bottom: 6px; }
+  .sign-lbl { font-size: 13px; color: #374151; font-style: italic; }
+  .footer { position: absolute; bottom: 16mm; left: 20mm; right: 20mm; text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 8px; }
+</style></head>
+<body>
+  <div class="page">
+    <div class="entete">
+      <img src="${LOGO_BASE64}" alt="logo"/>
+      <div>
+        <div class="soc-nom">SAJ GROUPE</div>
+        <div class="soc-info">
+          Galerie Médicale &middot; Libreville, Gabon<br/>
+          RCCM&nbsp;: GA-LBV-01-2020-B12-00179
+        </div>
+      </div>
+    </div>
+
+    <div class="titre-bloc"><span class="titre">${titre}</span></div>
+    <div class="num">N° de pièce : ${esc(numeroPiece(m))}</div>
+
+    <table class="det">
+      <tr><td class="lbl">Date</td><td>${frDate(m.date_mouvement)}${heure ? ' à ' + heure : ''}</td></tr>
+      <tr><td class="lbl">Nature de l'opération</td><td>${estEntree ? 'Entrée de caisse' : 'Sortie de caisse'}</td></tr>
+      <tr><td class="lbl">Catégorie</td><td>${esc(m.categorie) || '-'}</td></tr>
+      <tr><td class="lbl">Motif / Désignation</td><td>${esc(m.motif) || '-'}</td></tr>
+    </table>
+
+    <div class="montant-bloc">
+      <div class="montant-lbl">Montant ${estEntree ? 'reçu' : 'décaissé'}</div>
+      <div class="montant-val">${fmtCaisse(m.montant)}</div>
+    </div>
+
+    <div class="sign">
+      <div class="sign-box">
+        <div class="sign-line"></div>
+        <div class="sign-lbl">Signature & cachet</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Pièce générée le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} — SAJ Groupe, Galerie Médicale
+    </div>
+  </div>
+  <script>window.onload = function(){ window.print(); }</script>
+</body></html>`
+    w.document.write(html)
+    w.document.close()
+  }
+
   /* -------- Accès : admin ou comptable uniquement -------- */
   if (!isAdmin && !isComptable) {
     return (
@@ -305,13 +404,14 @@ export default function Caisse() {
                 <tr>
                   <th>Heure</th><th>Type</th><th>Catégorie</th><th>Motif</th>
                   <th style={{ textAlign: 'right' }}>Montant</th>
+                  <th style={{ textAlign: 'center' }}>Pièce</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Chargement...</td></tr>
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Chargement...</td></tr>
                 ) : mouvements.length === 0 ? (
-                  <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Aucune saisie pour aujourd'hui</td></tr>
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Aucune saisie pour aujourd'hui</td></tr>
                 ) : mouvements.map((m) => (
                   <tr key={m.id}>
                     <td style={{ color: 'var(--gray)' }}>
@@ -328,6 +428,9 @@ export default function Caisse() {
                     <td>{m.motif}</td>
                     <td className="font-mono" style={{ textAlign: 'right', fontWeight: 600, color: m.type === 'entree' ? '#16a34a' : 'var(--danger)' }}>
                       {m.type === 'entree' ? '+ ' : '- '}{fmtCaisse(m.montant)}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => imprimerRecu(m)} title="Imprimer la pièce">🖨</button>
                     </td>
                   </tr>
                 ))}
@@ -446,7 +549,7 @@ export default function Caisse() {
               <tr>
                 <th>Heure</th><th>Type</th><th>Catégorie</th><th>Motif</th>
                 <th style={{ textAlign: 'right' }}>Montant</th>
-                {!isClosed && <th style={{ textAlign: 'center' }}>Action</th>}
+                <th style={{ textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -473,7 +576,15 @@ export default function Caisse() {
                   </td>
                   {!isClosed && (
                     <td style={{ textAlign: 'center' }}>
-                      <button className="btn btn-danger btn-sm" onClick={() => supprimerMouvement(m.id)}>🗑</button>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                        <button className="btn btn-ghost btn-sm" onClick={() => imprimerRecu(m)} title="Imprimer la pièce">🖨</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => supprimerMouvement(m.id)} title="Supprimer">🗑</button>
+                      </div>
+                    </td>
+                  )}
+                  {isClosed && (
+                    <td style={{ textAlign: 'center' }}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => imprimerRecu(m)} title="Imprimer la pièce">🖨</button>
                     </td>
                   )}
                 </tr>
