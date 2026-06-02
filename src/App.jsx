@@ -10,6 +10,7 @@ import Produits from './pages/Produits'
 import Utilisateurs from './pages/Utilisateurs'
 import Parametres from './pages/Parametres'
 import Pointage from './pages/Pointage'
+import Caisse from './pages/Caisse'
 import Presences from './pages/Presences'
 import Chat from './pages/Chat'
 
