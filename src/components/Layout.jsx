@@ -10,6 +10,7 @@ const navItems = [
   { section: 'Facturation' },
   { to: '/factures', label: 'Factures', icon: 'file', roles: ['admin','comptable'] },
   { to: '/proforma', label: 'Pro Forma', icon: 'file-check', roles: ['admin','comptable'] },
+  { to: '/caisse', label: 'Caisse', icon: 'cash', roles: ['admin'] },
   { section: 'Logistique' },
   { to: '/livraison', label: 'Bons de livraison', icon: 'truck' },
   { section: 'Catalogue' },
@@ -34,6 +35,7 @@ const Icon = ({ name }) => {
     users: <><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2-5 5-5s5 2 5 5"/><circle cx="13" cy="7" r="2"/><path d="M11 14c0-2 .9-3 2-3"/></>,
     settings: <><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3"/></>,
     clock: <><circle cx="8" cy="8" r="7"/><path d="M8 4v4l2.5 2"/></>,
+    cash: <><rect x="1" y="3" width="14" height="10" rx="1.5"/><circle cx="8" cy="8" r="2.5"/></>,
     'user-check': <><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2-5 5-5s5 2 5 5"/><path d="M11 7l1.5 1.5L15 6"/></>,
     chat: <><path d="M14 9c0 .5-.2 1-.6 1.4l-1 .9C12 11.7 11.5 12 11 12H6l-3 2.5V4c0-.6.4-1 1-1h9c.6 0 1 .4 1 1v5z"/></>,
   }

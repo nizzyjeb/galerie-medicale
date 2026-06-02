@@ -35,6 +35,7 @@ export default function App() {
         <Route path="proforma" element={<ProtectedRoute comptableOnly><ProForma /></ProtectedRoute>} />
         <Route path="livraison" element={<BonsLivraison />} />
         <Route path="pointage" element={<Pointage />} />
+        <Route path="caisse" element={<ProtectedRoute adminOnly><Caisse /></ProtectedRoute>} />
         <Route path="presences" element={<ProtectedRoute adminOnly><Presences /></ProtectedRoute>} />
         <Route path="chat" element={<Chat />} />
         <Route path="produits" element={<ProtectedRoute comptableOnly><Produits /></ProtectedRoute>} />
