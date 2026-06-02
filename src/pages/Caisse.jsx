@@ -38,7 +38,8 @@ const frDate = (s) => {
 }
 
 export default function Caisse() {
-  const { user, isAdmin } = useAuth()
+  const { user, profile, isAdmin } = useAuth()
+  const isComptable = profile?.role === 'comptable'
 
   const [selectedDate, setSelectedDate] = useState(todayStr())
   const [mouvements, setMouvements] = useState([])
@@ -62,46 +63,61 @@ export default function Caisse() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const { data: mvts, error: e1 } = await supabase
-        .from('caisse_mouvements')
-        .select('*')
-        .eq('date_mouvement', selectedDate)
-        .order('created_at', { ascending: true })
-      if (e1) throw e1
+      if (isAdmin) {
+        // ----- Vue ADMIN : tout -----
+        const { data: mvts, error: e1 } = await supabase
+          .from('caisse_mouvements')
+          .select('*')
+          .eq('date_mouvement', selectedDate)
+          .order('created_at', { ascending: true })
+        if (e1) throw e1
 
-      const { data: clo, error: e2 } = await supabase
-        .from('caisse_clotures')
-        .select('*')
-        .eq('date_cloture', selectedDate)
-        .maybeSingle()
-      if (e2) throw e2
+        const { data: clo, error: e2 } = await supabase
+          .from('caisse_clotures')
+          .select('*')
+          .eq('date_cloture', selectedDate)
+          .maybeSingle()
+        if (e2) throw e2
 
-      const { data: prev, error: e3 } = await supabase
-        .from('caisse_clotures')
-        .select('solde_reel, solde_theorique, date_cloture')
-        .lt('date_cloture', selectedDate)
-        .order('date_cloture', { ascending: false })
-        .limit(1)
-      if (e3) throw e3
+        const { data: prev, error: e3 } = await supabase
+          .from('caisse_clotures')
+          .select('solde_reel, solde_theorique, date_cloture')
+          .lt('date_cloture', selectedDate)
+          .order('date_cloture', { ascending: false })
+          .limit(1)
+        if (e3) throw e3
 
-      let ouverture = 0
-      if (prev && prev.length > 0) {
-        const p = prev[0]
-        ouverture =
-          p.solde_reel !== null && p.solde_reel !== undefined
-            ? Number(p.solde_reel)
-            : Number(p.solde_theorique)
+        let ouverture = 0
+        if (prev && prev.length > 0) {
+          const p = prev[0]
+          ouverture =
+            p.solde_reel !== null && p.solde_reel !== undefined
+              ? Number(p.solde_reel)
+              : Number(p.solde_theorique)
+        }
+
+        setMouvements(mvts || [])
+        setCloture(clo || null)
+        setSoldeOuverture(ouverture)
+      } else {
+        // ----- Vue COMPTABLE : uniquement SES mouvements du jour -----
+        // (la RLS ne renvoie de toute façon que ses propres lignes)
+        const { data: mvts, error } = await supabase
+          .from('caisse_mouvements')
+          .select('*')
+          .eq('date_mouvement', todayStr())
+          .order('created_at', { ascending: true })
+        if (error) throw error
+        setMouvements(mvts || [])
+        setCloture(null)
+        setSoldeOuverture(0)
       }
-
-      setMouvements(mvts || [])
-      setCloture(clo || null)
-      setSoldeOuverture(ouverture)
     } catch (err) {
       toast.error('Erreur : ' + (err.message || 'chargement'))
     } finally {
       setLoading(false)
     }
-  }, [selectedDate])
+  }, [selectedDate, isAdmin])
 
   useEffect(() => {
     loadData()
@@ -137,8 +153,11 @@ export default function Caisse() {
     }
     setSaving(true)
     try {
+      // Le comptable saisit toujours sur la journée du jour ; l'admin
+      // peut saisir sur la date sélectionnée.
+      const dateMvt = isAdmin ? selectedDate : todayStr()
       const { error } = await supabase.from('caisse_mouvements').insert({
-        date_mouvement: selectedDate,
+        date_mouvement: dateMvt,
         type: fType,
         montant,
         categorie: fCategorie,
@@ -251,15 +270,113 @@ export default function Caisse() {
     URL.revokeObjectURL(url)
   }
 
-  /* -------- Accès admin uniquement -------- */
-  if (!isAdmin) {
+  /* -------- Accès : admin ou comptable uniquement -------- */
+  if (!isAdmin && !isComptable) {
     return (
       <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray)' }}>
-        Accès réservé à l'administrateur.
+        Accès non autorisé.
       </div>
     )
   }
 
+  /* ============================================================ */
+  /*  VUE COMPTABLE : saisie + ses propres mouvements du jour     */
+  /* ============================================================ */
+  if (isComptable) {
+    return (
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+          <h1 style={{ fontSize: 18, fontWeight: 600 }}>Saisie de Caisse</h1>
+          <span style={{ fontSize: 13, color: 'var(--gray)' }}>Journée du {frDate(todayStr())}</span>
+        </div>
+
+        <div style={{ padding: '10px 14px', marginBottom: 16, borderRadius: 8, background: '#fff7ed', border: '1px solid #fed7aa', color: '#9a3412', fontSize: 13 }}>
+          ℹ️ Vous pouvez enregistrer des entrées et des sorties d'espèces. Vous voyez uniquement vos propres saisies du jour. La modification, la suppression et les soldes sont réservés à l'administrateur.
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <button className="btn btn-primary" onClick={() => setShowForm(true)}>+ Nouveau mouvement</button>
+        </div>
+
+        <div className="card">
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Heure</th><th>Type</th><th>Catégorie</th><th>Motif</th>
+                  <th style={{ textAlign: 'right' }}>Montant</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Chargement...</td></tr>
+                ) : mouvements.length === 0 ? (
+                  <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Aucune saisie pour aujourd'hui</td></tr>
+                ) : mouvements.map((m) => (
+                  <tr key={m.id}>
+                    <td style={{ color: 'var(--gray)' }}>
+                      {new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td>
+                      <span className="badge" style={m.type === 'entree'
+                        ? { background: '#dcfce7', color: '#166534' }
+                        : { background: '#fee2e2', color: '#991b1b' }}>
+                        {m.type === 'entree' ? 'Entrée' : 'Sortie'}
+                      </span>
+                    </td>
+                    <td>{m.categorie}</td>
+                    <td>{m.motif}</td>
+                    <td className="font-mono" style={{ textAlign: 'right', fontWeight: 600, color: m.type === 'entree' ? '#16a34a' : 'var(--danger)' }}>
+                      {m.type === 'entree' ? '+ ' : '- '}{fmtCaisse(m.montant)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* MODAL nouveau mouvement (partagé) */}
+        {showForm && (
+          <div onClick={() => setShowForm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+            <div className="card" onClick={(e) => e.stopPropagation()} style={{ width: 'min(440px, 92vw)' }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Nouveau mouvement</h2>
+
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                <button className="btn" style={{ flex: 1, background: fType === 'entree' ? '#16a34a' : 'var(--lgray)', color: fType === 'entree' ? '#fff' : 'var(--text)' }} onClick={() => setFType('entree')}>Entrée</button>
+                <button className="btn" style={{ flex: 1, background: fType === 'sortie' ? 'var(--danger)' : 'var(--lgray)', color: fType === 'sortie' ? '#fff' : 'var(--text)' }} onClick={() => setFType('sortie')}>Sortie</button>
+              </div>
+
+              <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>Montant (FCFA)</label>
+              <input type="number" value={fMontant} onChange={(e) => setFMontant(e.target.value)} placeholder="0" autoFocus
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1px solid var(--border)', boxSizing: 'border-box', marginBottom: 14 }} />
+
+              <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>Catégorie</label>
+              <select value={fCategorie} onChange={(e) => setFCategorie(e.target.value)}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1px solid var(--border)', boxSizing: 'border-box', marginBottom: 14 }}>
+                {(fType === 'entree' ? CATEGORIES_ENTREE : CATEGORIES_SORTIE).map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+
+              <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>Motif / description</label>
+              <input type="text" value={fMotif} onChange={(e) => setFMotif(e.target.value)} placeholder="Ex: Vente consommables comptant"
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1px solid var(--border)', boxSizing: 'border-box' }} />
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowForm(false)}>Annuler</button>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={ajouterMouvement} disabled={saving}>
+                  {saving ? 'Enregistrement...' : 'Enregistrer'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  /* ============================================================ */
+  /*  VUE ADMIN : complète                                        */
+  /* ============================================================ */
   return (
     <div>
       {/* En-tête */}

@@ -10,7 +10,7 @@ const navItems = [
   { section: 'Facturation' },
   { to: '/factures', label: 'Factures', icon: 'file', roles: ['admin','comptable'] },
   { to: '/proforma', label: 'Pro Forma', icon: 'file-check', roles: ['admin','comptable'] },
-  { to: '/caisse', label: 'Caisse', icon: 'cash', roles: ['admin'] },
+  { to: '/caisse', label: 'Caisse', icon: 'cash', roles: ['admin','comptable'] },
   { section: 'Logistique' },
   { to: '/livraison', label: 'Bons de livraison', icon: 'truck' },
   { section: 'Catalogue' },
