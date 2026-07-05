@@ -13,6 +13,9 @@ import Pointage from './pages/Pointage'
 import Caisse from './pages/Caisse'
 import Presences from './pages/Presences'
 import Chat from './pages/Chat'
+import Fournisseurs from './pages/Fournisseurs'
+import BonsCommande from './pages/BonsCommande'
+import Stock from './pages/Stock'
 
 function ProtectedRoute({ children, adminOnly = false, comptableOnly = false }) {
   const { user, profile, loading } = useAuth()
@@ -40,6 +43,9 @@ export default function App() {
         <Route path="presences" element={<ProtectedRoute adminOnly><Presences /></ProtectedRoute>} />
         <Route path="chat" element={<Chat />} />
         <Route path="produits" element={<ProtectedRoute comptableOnly><Produits /></ProtectedRoute>} />
+        <Route path="fournisseurs" element={<ProtectedRoute comptableOnly><Fournisseurs /></ProtectedRoute>} />
+        <Route path="bons-commande" element={<ProtectedRoute comptableOnly><BonsCommande /></ProtectedRoute>} />
+        <Route path="stock" element={<ProtectedRoute comptableOnly><Stock /></ProtectedRoute>} />
         <Route path="utilisateurs" element={<ProtectedRoute adminOnly><Utilisateurs /></ProtectedRoute>} />
         <Route path="parametres" element={<ProtectedRoute adminOnly><Parametres /></ProtectedRoute>} />
       </Route>
