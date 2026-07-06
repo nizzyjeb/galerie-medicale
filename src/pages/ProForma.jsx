@@ -34,22 +34,38 @@ export default function ProForma() {
 
   const convertirEnFacture = async (pf) => {
     if (!window.confirm(`Convertir ${pf.numero} en facture définitive ?`)) return
-    const { count } = await supabase.from('factures').select('*', { count: 'exact', head: true }).eq('type', 'facture')
-    const numero = `FACT-${String((count || 0) + 1).padStart(3, '0')}-${new Date().getFullYear()}`
-    const { data: newFact } = await supabase.from('factures').insert({
+
+    const year = new Date().getFullYear()
+    // Numérotation basée sur le dernier numéro réellement utilisé (évite les collisions avec la contrainte UNIQUE sur numero)
+    const { data: last } = await supabase
+      .from('factures')
+      .select('numero')
+      .eq('type', 'facture')
+      .like('numero', `FACT-%-${year}`)
+      .order('numero', { ascending: false })
+      .limit(1)
+
+    const lastSeq = last?.[0] ? parseInt(last[0].numero.split('-')[1], 10) : 0
+    const numero = `FACT-${String(lastSeq + 1).padStart(3, '0')}-${year}`
+
+    const { data: newFact, error } = await supabase.from('factures').insert({
       ...pf, id: undefined, numero, type: 'facture',
       statut: 'attente', date_emission: today(),
       date_echeance: addDays(today(), 30), created_at: undefined, updated_at: undefined
     }).select().single()
-    if (newFact) {
-      const { data: lignes } = await supabase.from('facture_lignes').select('*').eq('facture_id', pf.id)
-      if (lignes?.length) {
-        await supabase.from('facture_lignes').insert(lignes.map(l => ({ ...l, id: undefined, facture_id: newFact.id })))
-      }
-      await supabase.from('factures').update({ statut: 'en_cours' }).eq('id', pf.id)
-      toast.success(`Facture ${numero} créée depuis ${pf.numero}`)
-      fetchPF()
+
+    if (error || !newFact) {
+      toast.error(`Échec de la conversion : ${error?.message || 'erreur inconnue'}`)
+      return
     }
+
+    const { data: lignes } = await supabase.from('facture_lignes').select('*').eq('facture_id', pf.id)
+    if (lignes?.length) {
+      await supabase.from('facture_lignes').insert(lignes.map(l => ({ ...l, id: undefined, facture_id: newFact.id })))
+    }
+    await supabase.from('factures').update({ statut: 'en_cours' }).eq('id', pf.id)
+    toast.success(`Facture ${numero} créée depuis ${pf.numero}`)
+    fetchPF()
   }
 
 
