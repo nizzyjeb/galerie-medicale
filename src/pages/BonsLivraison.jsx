@@ -212,23 +212,54 @@ export default function BonsLivraison() {
     const livrees = lignesBL.filter(l => l.statut_ligne==='livre').length
     const total = lignesBL.length
     const statut = livrees===total && total>0 ? 'complet' : livrees===0 ? 'attente' : 'partiel'
-    const { count } = await supabase.from('bons_livraison').select('*', { count:'exact', head:true })
-    const numero = `BL-${String((count||0)+1).padStart(3,'0')}-${new Date().getFullYear()}`
-    const { data:bl } = await supabase.from('bons_livraison').insert({
-      numero, facture_id:parseInt(form.facture_id),
-      client_nom: facture?.client_nom||'',
-      date_livraison:form.date_livraison,
-      livreur:form.livreur, statut, remarques:form.remarques,
-      created_by:user.id,
-    }).select().single()
-    if (bl && lignesBL.length>0) {
+
+    const annee = new Date().getFullYear()
+    // Numéro basé sur le plus grand numéro BL existant de l'année (robuste aux suppressions)
+    const prochainNumero = async () => {
+      const { data: existants } = await supabase
+        .from('bons_livraison')
+        .select('numero')
+        .like('numero', `BL-%-${annee}`)
+      let maxSeq = 0
+      const regex = new RegExp(`^BL-(\\d+)-${annee}$`)
+      for (const row of (existants || [])) {
+        const m = row.numero?.match(regex)
+        if (m) { const n = parseInt(m[1], 10); if (n > maxSeq) maxSeq = n }
+      }
+      return `BL-${String(maxSeq + 1).padStart(3, '0')}-${annee}`
+    }
+
+    // Insertion avec jusqu'à 5 tentatives en cas de collision de numéro (code 23505)
+    let bl = null
+    let derniereErreur = null
+    for (let essai = 0; essai < 5; essai++) {
+      const numero = await prochainNumero()
+      const { data, error } = await supabase.from('bons_livraison').insert({
+        numero, facture_id:parseInt(form.facture_id),
+        client_nom: facture?.client_nom||'',
+        date_livraison:form.date_livraison,
+        livreur:form.livreur, statut, remarques:form.remarques,
+        created_by:user.id,
+      }).select().single()
+      if (!error) { bl = data; break }
+      derniereErreur = error
+      if (error.code !== '23505') break
+    }
+
+    if (!bl) {
+      console.error('Erreur création BL :', derniereErreur)
+      toast.error('Erreur lors de la création du bon de livraison')
+      return
+    }
+
+    if (lignesBL.length>0) {
       await supabase.from('bl_lignes').insert(lignesBL.map(l => ({
         bl_id:bl.id, designation:l.designation,
         qte_commandee:l.quantite, qte_livree:l.qte_livree,
         unite:'Forfait', statut_ligne:l.statut_ligne, observation:l.observation,
       })))
     }
-    toast.success(`Bon de livraison ${numero} créé !`)
+    toast.success(`Bon de livraison ${bl.numero} créé !`)
     setShowModal(false)
     setForm({ facture_id:'', date_livraison:today(), livreur:'', remarques:'' })
     setLignesBL([])
