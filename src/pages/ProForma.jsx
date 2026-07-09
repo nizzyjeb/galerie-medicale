@@ -59,9 +59,26 @@ export default function ProForma() {
       return
     }
 
-    const { data: lignes } = await supabase.from('facture_lignes').select('*').eq('facture_id', pf.id)
+    const { data: lignes } = await supabase.from('facture_lignes').select('*').eq('facture_id', pf.id).order('ordre')
     if (lignes?.length) {
-      await supabase.from('facture_lignes').insert(lignes.map(l => ({ ...l, id: undefined, facture_id: newFact.id })))
+      // ★ CORRECTIF : on ne recopie QUE les colonnes insérables.
+      // Ne jamais réinsérer `id` ni `total_ht` (colonne générée) : Postgres
+      // rejette toute écriture dans une colonne générée, ce qui faisait
+      // échouer silencieusement la copie → facture sans lignes (désignations vides).
+      const { error: lignesError } = await supabase.from('facture_lignes').insert(
+        lignes.map(l => ({
+          facture_id: newFact.id,
+          produit_id: l.produit_id ?? null,
+          designation: l.designation,
+          quantite: l.quantite,
+          prix_unitaire: l.prix_unitaire,
+          exonere_tva: !!l.exonere_tva,
+          ordre: l.ordre ?? 0,
+        }))
+      )
+      if (lignesError) {
+        toast.error(`Facture créée mais copie des lignes échouée : ${lignesError.message}`)
+      }
     }
     await supabase.from('factures').update({ statut: 'en_cours' }).eq('id', pf.id)
     toast.success(`Facture ${numero} créée depuis ${pf.numero}`)
