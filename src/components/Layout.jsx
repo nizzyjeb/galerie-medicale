@@ -26,6 +26,7 @@ const navItems = [
   { to: '/presences', label: 'Présences', icon: 'user-check', roles: ['admin'] },
   { section: 'Administration' },
   { to: '/utilisateurs', label: 'Utilisateurs', icon: 'users', roles: ['admin'] },
+  { to: '/journal', label: "Journal d'activité", icon: 'clock', roles: ['admin'] },
   { to: '/parametres', label: 'Paramètres', icon: 'settings', roles: ['admin'] },
 ]
 

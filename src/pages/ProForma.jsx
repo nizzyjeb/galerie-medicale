@@ -8,6 +8,7 @@ import FactureModal from '../components/FactureModal'
 import { exportFacturesExcel } from '../lib/exportExcel'
 import EditFactureModal from '../components/EditFactureModal'
 import toast from 'react-hot-toast'
+import { TraceCell, HistoriqueModal, useProfils } from '../components/Tracabilite'
 
 export default function ProForma() {
   const { isAdmin } = useAuth()
@@ -17,6 +18,8 @@ export default function ProForma() {
   const [previewDoc, setPreviewDoc] = useState(null)
   const [contextMenu, setContextMenu] = useState(null)
   const [editDoc, setEditDoc] = useState(null)
+  const [histDoc, setHistDoc] = useState(null)
+  const profils = useProfils()
 
   useEffect(() => { fetchPF() }, [])
 
@@ -101,6 +104,7 @@ export default function ProForma() {
       items: [
         { icon: '👁', label: 'Aperçu / Imprimer', action: () => openPreview(p) },
         { icon: '✏️', label: 'Modifier', action: () => setEditDoc(p) },
+        { icon: '🕘', label: 'Historique (qui / quand)', action: () => setHistDoc(p) },
         { icon: '📄', label: 'Convertir en facture', action: () => convertirEnFacture(p) },
         ...(isAdmin ? [
           'divider',
@@ -130,13 +134,13 @@ export default function ProForma() {
         <div className="table-wrap">
           <table>
             <thead>
-              <tr><th>N°</th><th>Client</th><th>Objet</th><th>Date</th><th>Validité</th><th>Montant TTC</th><th>Statut</th><th></th></tr>
+              <tr><th>N°</th><th>Client</th><th>Objet</th><th>Date</th><th>Validité</th><th>Montant TTC</th><th>Statut</th><th>Traçabilité</th><th></th></tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Chargement...</td></tr>
+                <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Chargement...</td></tr>
               ) : proformas.length === 0 ? (
-                <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Aucune pro forma</td></tr>
+                <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Aucune pro forma</td></tr>
               ) : proformas.map(p => {
                 const st = STATUTS_FACTURE[p.statut] || STATUTS_FACTURE.en_cours
                 return (
@@ -148,6 +152,7 @@ export default function ProForma() {
                     <td style={{ color: 'var(--gray)' }}>{fmtDate(p.date_echeance)}</td>
                     <td className="font-mono" style={{ fontWeight: 600 }}>{fmt(p.total_ttc)}</td>
                     <td><span className="badge" style={{ background: st.bg, color: st.color }}>{st.label}</span></td>
+                    <td><TraceCell doc={p} profils={profils} onHistorique={() => setHistDoc(p)} /></td>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button className="btn btn-ghost btn-sm" onClick={() => setEditDoc(p)}>✏️ Modifier</button>
@@ -172,6 +177,7 @@ export default function ProForma() {
 
       {editDoc && <EditFactureModal doc={editDoc} onClose={() => setEditDoc(null)} onSaved={fetchPF} />}
       {showModal && <FactureModal type="proforma" onClose={() => setShowModal(false)} onSaved={fetchPF} />}
+      {histDoc && <HistoriqueModal doc={histDoc} onClose={() => setHistDoc(null)} />}
       {contextMenu && <ContextMenu x={contextMenu.x} y={contextMenu.y} items={contextMenu.items} onClose={() => setContextMenu(null)} />}
       {previewDoc && <PrintDocument doc={previewDoc} type="proforma" onClose={() => setPreviewDoc(null)} />}
     </div>

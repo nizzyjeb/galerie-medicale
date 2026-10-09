@@ -8,6 +8,7 @@ import FactureModal from '../components/FactureModal'
 import { exportFacturesExcel, exportRegistreExcel } from '../lib/exportExcel'
 import EditFactureModal from '../components/EditFactureModal'
 import toast from 'react-hot-toast'
+import { TraceCell, HistoriqueModal, useProfils } from '../components/Tracabilite'
 
 export default function Factures() {
   const { user, profile, isAdmin } = useAuth()
@@ -18,6 +19,8 @@ export default function Factures() {
   const [previewDoc, setPreviewDoc] = useState(null)
   const [contextMenu, setContextMenu] = useState(null)
   const [editDoc, setEditDoc] = useState(null)
+  const [histDoc, setHistDoc] = useState(null)
+  const profils = useProfils()
 
   useEffect(() => { fetchFactures() }, [])
 
@@ -74,6 +77,7 @@ export default function Factures() {
       items: [
         { icon: '👁', label: 'Aperçu / Imprimer', action: () => openPreview(f) },
         { icon: '✏️', label: 'Modifier', action: () => setEditDoc(f) },
+        { icon: '🕘', label: 'Historique (qui / quand)', action: () => setHistDoc(f) },
         // ★ NOUVEAU : Option Valider dans le menu contextuel (admin + non validée)
         ...(isAdmin && !f.valide ? [
           'divider',
@@ -133,13 +137,13 @@ export default function Factures() {
         <div className="table-wrap">
           <table>
             <thead>
-              <tr><th>N°</th><th>Client</th><th>Objet</th><th>Émission</th><th>Échéance</th><th>HT</th><th>TTC</th><th>Validation</th><th>Statut</th><th>Actions</th></tr>
+              <tr><th>N°</th><th>Client</th><th>Objet</th><th>Émission</th><th>Échéance</th><th>HT</th><th>TTC</th><th>Validation</th><th>Statut</th><th>Traçabilité</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Chargement...</td></tr>
+                <tr><td colSpan={11} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Chargement...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Aucune facture</td></tr>
+                <tr><td colSpan={11} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Aucune facture</td></tr>
               ) : filtered.map(f => {
                 const st = STATUTS_FACTURE[f.statut] || STATUTS_FACTURE.attente
                 return (
@@ -160,6 +164,7 @@ export default function Factures() {
                       )}
                     </td>
                     <td><span className="badge" style={{ background: st.bg, color: st.color }}>{st.label}</span></td>
+                    <td><TraceCell doc={f} profils={profils} onHistorique={() => setHistDoc(f)} /></td>
                     <td>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         <button className="btn btn-ghost btn-sm" onClick={() => openPreview(f)}>👁 Aperçu</button>
@@ -200,6 +205,7 @@ export default function Factures() {
       {showModal && <FactureModal type="facture" onClose={() => setShowModal(false)} onSaved={fetchFactures} />}
       {editDoc && <EditFactureModal doc={editDoc} onClose={() => setEditDoc(null)} onSaved={fetchFactures} />}
       {previewDoc && <PrintDocument doc={previewDoc} type="facture" onClose={() => setPreviewDoc(null)} />}
+      {histDoc && <HistoriqueModal doc={histDoc} onClose={() => setHistDoc(null)} />}
       {contextMenu && <ContextMenu x={contextMenu.x} y={contextMenu.y} items={contextMenu.items} onClose={() => setContextMenu(null)} />}
     </div>
   )
