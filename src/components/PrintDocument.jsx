@@ -422,8 +422,8 @@ function DocumentContent({
                   <option>Flacon</option>
                 </select>
               </td>
-              <td className="right">{fmt(l.prix_unitaire)} FCFA</td>
-              <td className="right">{fmt(l.total_ht)} FCFA</td>
+              <td className="right">{fmt(l.prix_unitaire)}</td>
+              <td className="right">{fmt(l.total_ht)}</td>
             </tr>
           ))}
         </tbody>
@@ -431,17 +431,17 @@ function DocumentContent({
 
       {/* TOTAUX */}
       <div className="totaux">
-        <div className="row"><span>Sous-total HT</span><b>{fmt(sousTotal)} FCFA</b></div>
-        <div className="row"><span>Remise ({remisePct}%)</span><b>{fmt(remise)} FCFA</b></div>
-        <div className="row"><span>Base HT après remise</span><b>{fmt(base)} FCFA</b></div>
-        <div className="row"><span>TVA (18%)</span><b>{fmt(tva)} FCFA</b></div>
-        <div className="row"><span>CSS (1%)</span><b>{fmt(css)} FCFA</b></div>
-        <div className="row ttc"><span>TOTAL TTC</span><span>{fmt(ttc)} FCFA</span></div>
+        <div className="row"><span>Sous-total HT</span><b>{fmt(sousTotal)}</b></div>
+        <div className="row"><span>Remise ({remisePct}%)</span><b>{fmt(remise)}</b></div>
+        <div className="row"><span>Base HT après remise</span><b>{fmt(base)}</b></div>
+        <div className="row"><span>TVA (18%)</span><b>{fmt(tva)}</b></div>
+        <div className="row"><span>CSS (1%)</span><b>{fmt(css)}</b></div>
+        <div className="row ttc"><span>TOTAL TTC</span><span>{fmt(ttc)}</span></div>
       </div>
 
       {isProforma && (
         <div className="estimation">
-          Estimation arrêtée à la somme de <b>{fmt(ttc)} FCFA TTC</b> (sous réserve de validation)
+          Estimation arrêtée à la somme de <b>{fmt(ttc)} TTC</b> (sous réserve de validation)
         </div>
       )}
 
