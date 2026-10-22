@@ -358,6 +358,8 @@ function DocumentContent({
         <div className="value">{fmtDate(doc.date_echeance)}</div>
         <div className="label">Objet :</div>
         <div className="value">{doc.objet || '—'}</div>
+        <div className="label">Vendeur :</div>
+        <div className="value">{doc.vendeur || '—'}</div>
       </div>
 
       {/* PARTIES */}

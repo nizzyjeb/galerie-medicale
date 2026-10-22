@@ -11,6 +11,7 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
     client_adresse: doc.client_adresse || '',
     client_nif: doc.client_nif || '',
     objet: doc.objet || '',
+    vendeur: doc.vendeur || '',
     date_emission: doc.date_emission || '',
     remise_pct: doc.remise_pct || 0,
   })
@@ -69,6 +70,7 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
       client_adresse: form.client_adresse,
       client_nif: form.client_nif,
       objet: form.objet,
+      vendeur: form.vendeur.trim() || null,
       date_emission: form.date_emission,
       remise_pct: parseFloat(form.remise_pct) || 0,
       sous_total_ht: totaux.sousTotal,
@@ -144,9 +146,15 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
               <input type="date" value={form.date_emission} onChange={e => setForm(f => ({ ...f, date_emission: e.target.value }))} />
             </div>
           </div>
-          <div className="form-group mb-4">
-            <label>Objet</label>
-            <input value={form.objet} onChange={e => setForm(f => ({ ...f, objet: e.target.value }))} />
+          <div className="form-grid form-grid-2 mb-4">
+            <div className="form-group">
+              <label>Objet</label>
+              <input value={form.objet} onChange={e => setForm(f => ({ ...f, objet: e.target.value }))} />
+            </div>
+            <div className="form-group">
+              <label>Vendeur</label>
+              <input value={form.vendeur} onChange={e => setForm(f => ({ ...f, vendeur: e.target.value }))} placeholder="Nom du vendeur" />
+            </div>
           </div>
 
           <div className="divider" />

@@ -1,7 +1,16 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { fmtDate, ROLES } from '../lib/utils'
 import toast from 'react-hot-toast'
+
+// Client séparé, sans session persistée : créer un compte ne doit pas
+// déconnecter l'administrateur ni remplacer sa session par celle du nouvel utilisateur.
+const signupClient = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'gm-signup-tmp' } }
+)
 
 export default function Utilisateurs() {
   const [users, setUsers] = useState([])
@@ -20,21 +29,49 @@ export default function Utilisateurs() {
 
   const handleInvite = async () => {
     if (!form.nom || !form.email || !form.password) { toast.error('Remplissez tous les champs'); return }
+    if (form.password.length < 6) { toast.error('Mot de passe : 6 caractères minimum'); return }
     setSaving(true)
-    const { error } = await supabase.auth.admin
-      ? supabase.auth.signUp({ email: form.email, password: form.password, options: { data: { nom: form.nom, role: form.role } } })
-      : { error: null }
+    const email = form.email.trim().toLowerCase()
+
+    const { data, error } = await signupClient.auth.signUp({
+      email, password: form.password,
+      options: { data: { nom: form.nom.trim(), role: form.role } }
+    })
 
     if (error) {
-      toast.error(error.message)
-    } else {
-      await supabase.from('profiles').upsert({ email: form.email, nom: form.nom, role: form.role })
-      toast.success(`Utilisateur ${form.nom} créé ! Il peut se connecter avec son email et mot de passe.`)
-      setShowModal(false)
-      setForm({ nom:'', email:'', role:'comptable', password:'' })
-      fetchUsers()
+      toast.error(error.message.includes('registered') ? 'Cet email a déjà un compte' : error.message)
+      setSaving(false); return
     }
+    // Supabase renvoie un utilisateur sans identité si l'email existe déjà
+    if (!data?.user || (data.user.identities && data.user.identities.length === 0)) {
+      toast.error('Cet email a déjà un compte. Utilisez « Mot de passe » pour le réinitialiser.')
+      setSaving(false); return
+    }
+
+    const uid = data.user.id
+    // Confirme le compte immédiatement (sinon connexion refusée : "Email not confirmed")
+    const { error: confErr } = await supabase.rpc('admin_confirmer_utilisateur', { p_user_id: uid })
+    // Le profil est créé par le trigger ; on fixe nom / rôle / actif
+    await supabase.from('profiles').update({ nom: form.nom.trim(), role: form.role, actif: true }).eq('id', uid)
+
+    if (confErr) {
+      toast.error("Compte créé mais non confirmé : exécutez la migration SQL « vendeur_comptes » dans Supabase.", { duration: 8000 })
+    } else {
+      toast.success(`Utilisateur ${form.nom} créé ! Il peut se connecter avec ${email}.`)
+    }
+    setShowModal(false)
+    setForm({ nom:'', email:'', role:'comptable', password:'' })
+    fetchUsers()
     setSaving(false)
+  }
+
+  const resetPassword = async (u) => {
+    const pwd = window.prompt(`Nouveau mot de passe pour ${u.nom} (${u.email}) — 6 caractères minimum :`)
+    if (!pwd) return
+    if (pwd.length < 6) { toast.error('Mot de passe : 6 caractères minimum'); return }
+    const { error } = await supabase.rpc('admin_definir_mot_de_passe', { p_user_id: u.id, p_password: pwd })
+    if (error) toast.error(error.message)
+    else toast.success(`Mot de passe de ${u.nom} mis à jour. Communiquez-le-lui.`)
   }
 
   const toggleActif = async (id, actif) => {
@@ -76,7 +113,8 @@ export default function Utilisateurs() {
                         {u.actif ? 'Actif' : 'Suspendu'}
                       </span>
                     </td>
-                    <td>
+                    <td style={{ display:'flex', gap:6 }}>
+                      <button className="btn btn-sm btn-ghost" onClick={() => resetPassword(u)}>Mot de passe</button>
                       {u.role !== 'admin' && (
                         <button className={`btn btn-sm ${u.actif ? 'btn-danger' : 'btn-success'}`}
                           onClick={() => toggleActif(u.id, u.actif)}>

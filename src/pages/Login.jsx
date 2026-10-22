@@ -13,9 +13,11 @@ export default function Login() {
     e.preventDefault()
     if (!email || !password) { toast.error('Remplissez tous les champs'); return }
     setLoading(true)
-    const error = await signIn(email, password)
+    const error = await signIn(email.trim().toLowerCase(), password)
     if (error) {
-      toast.error('Email ou mot de passe incorrect')
+      const msg = (error.message || '').toLowerCase()
+      if (msg.includes('not confirmed')) toast.error("Compte non confirmé. Demandez à l'administrateur de le confirmer.")
+      else toast.error('Email ou mot de passe incorrect')
       setLoading(false)
     }
   }

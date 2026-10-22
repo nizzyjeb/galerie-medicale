@@ -10,13 +10,18 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
   const [loading, setSaving] = useState(false)
   const [form, setForm] = useState({
     client_nom: '', client_adresse: '', client_nif: '', objet: '',
-    date_emission: today(), remise_pct: 0,
+    date_emission: today(), remise_pct: 0, vendeur: '',
   })
   const [lignes, setLignes] = useState([
     { designation: '', quantite: 1, prix_unitaire: '', produit_id: null, exonere_tva: false },
     { designation: '', quantite: 1, prix_unitaire: '', produit_id: null, exonere_tva: false },
     { designation: '', quantite: 1, prix_unitaire: '', produit_id: null, exonere_tva: false },
   ])
+
+  // Pré-remplit le vendeur avec le nom de l'utilisateur connecté (modifiable)
+  useEffect(() => {
+    if (profile?.nom) setForm(f => (f.vendeur ? f : { ...f, vendeur: profile.nom }))
+  }, [profile?.nom])
 
   useEffect(() => {
     supabase.from('produits').select('*').eq('actif', true).order('designation')
@@ -88,6 +93,7 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
       client_adresse: form.client_adresse,
       client_nif: form.client_nif,
       objet: form.objet,
+      vendeur: form.vendeur.trim() || null,
       date_emission: form.date_emission,
       date_echeance: addDays(form.date_emission, 30),
       remise_pct: parseFloat(form.remise_pct) || 0,
@@ -189,9 +195,15 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
               <input type="date" value={form.date_emission} onChange={e => setForm(f=>({...f,date_emission:e.target.value}))} />
             </div>
           </div>
-          <div className="form-group mb-4">
-            <label>Objet / Commande *</label>
-            <input value={form.objet} onChange={e => setForm(f=>({...f,objet:e.target.value}))} placeholder="Fourniture de consommables médicaux" />
+          <div className="form-grid form-grid-2 mb-4">
+            <div className="form-group">
+              <label>Objet / Commande *</label>
+              <input value={form.objet} onChange={e => setForm(f=>({...f,objet:e.target.value}))} placeholder="Fourniture de consommables médicaux" />
+            </div>
+            <div className="form-group">
+              <label>Vendeur</label>
+              <input value={form.vendeur} onChange={e => setForm(f=>({...f,vendeur:e.target.value}))} placeholder="Nom du vendeur" />
+            </div>
           </div>
 
           <div className="divider" />
