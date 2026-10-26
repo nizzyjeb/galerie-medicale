@@ -8,6 +8,7 @@ import FactureModal from '../components/FactureModal'
 import { exportFacturesExcel } from '../lib/exportExcel'
 import EditFactureModal from '../components/EditFactureModal'
 import toast from 'react-hot-toast'
+import SearchBox, { correspond } from '../components/SearchBox'
 import { TraceCell, HistoriqueModal, useProfils } from '../components/Tracabilite'
 
 export default function ProForma() {
@@ -16,6 +17,7 @@ export default function ProForma() {
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [previewDoc, setPreviewDoc] = useState(null)
+  const [recherche, setRecherche] = useState('')
   const [contextMenu, setContextMenu] = useState(null)
   const [editDoc, setEditDoc] = useState(null)
   const [histDoc, setHistDoc] = useState(null)
@@ -114,6 +116,8 @@ export default function ProForma() {
     })
   }
 
+  const proformasFiltrees = proformas.filter(p => correspond(p, recherche, fmtDate))
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -130,6 +134,11 @@ export default function ProForma() {
         La pro forma est un document de devis non fiscal. Elle peut être convertie en facture définitive en un clic.
       </div>
 
+      <div style={{ marginBottom: 16 }}>
+        <SearchBox value={recherche} onChange={setRecherche} placeholder="N°, client, objet, montant, date…"
+          total={proformas.length} trouves={proformasFiltrees.length} />
+      </div>
+
       <div className="card">
         <div className="table-wrap">
           <table>
@@ -139,9 +148,9 @@ export default function ProForma() {
             <tbody>
               {loading ? (
                 <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Chargement...</td></tr>
-              ) : proformas.length === 0 ? (
-                <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Aucune pro forma</td></tr>
-              ) : proformas.map(p => {
+              ) : proformasFiltrees.length === 0 ? (
+                <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>{recherche ? 'Aucune pro forma ne correspond à la recherche' : 'Aucune pro forma'}</td></tr>
+              ) : proformasFiltrees.map(p => {
                 const st = STATUTS_FACTURE[p.statut] || STATUTS_FACTURE.en_cours
                 return (
                   <tr key={p.id} onContextMenu={e => handleContextMenu(e, p)} style={{ cursor:'context-menu' }}>

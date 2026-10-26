@@ -8,12 +8,14 @@ import FactureModal from '../components/FactureModal'
 import { exportFacturesExcel, exportRegistreExcel } from '../lib/exportExcel'
 import EditFactureModal from '../components/EditFactureModal'
 import toast from 'react-hot-toast'
+import SearchBox, { correspond } from '../components/SearchBox'
 import { TraceCell, HistoriqueModal, useProfils } from '../components/Tracabilite'
 
 export default function Factures() {
   const { user, profile, isAdmin } = useAuth()
   const [factures, setFactures] = useState([])
   const [filter, setFilter] = useState('all')
+  const [recherche, setRecherche] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [previewDoc, setPreviewDoc] = useState(null)
@@ -95,7 +97,8 @@ export default function Factures() {
     })
   }
 
-  const filtered = filter === 'all' ? factures : factures.filter(f => f.statut === filter)
+  const filtered = (filter === 'all' ? factures : factures.filter(f => f.statut === filter))
+    .filter(f => correspond(f, recherche, fmtDate))
 
   return (
     <div>
@@ -112,7 +115,8 @@ export default function Factures() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 4, background: 'var(--lgray)', padding: 4, borderRadius: 10, marginBottom: 20, width: 'fit-content' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 4, background: 'var(--lgray)', padding: 4, borderRadius: 10, width: 'fit-content' }}>
         {[['all', 'Toutes'], ['attente', 'En attente'], ['payee', 'Payées'], ['retard', 'En retard']].map(([val, label]) => (
           <button key={val} onClick={() => setFilter(val)} style={{
             padding: '6px 14px', borderRadius: 7, fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer',
@@ -120,6 +124,9 @@ export default function Factures() {
             boxShadow: filter === val ? 'var(--shadow-sm)' : 'none'
           }}>{label}</button>
         ))}
+      </div>
+      <SearchBox value={recherche} onChange={setRecherche} placeholder="N°, client, objet, montant, date…"
+        total={filter === 'all' ? factures.length : factures.filter(f => f.statut === filter).length} trouves={filtered.length} />
       </div>
 
       {/* ★ NOUVEAU : Bandeau d'info pour le comptable */}
@@ -143,7 +150,7 @@ export default function Factures() {
               {loading ? (
                 <tr><td colSpan={11} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Chargement...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={11} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Aucune facture</td></tr>
+                <tr><td colSpan={11} style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>{recherche ? 'Aucune facture ne correspond à la recherche' : 'Aucune facture'}</td></tr>
               ) : filtered.map(f => {
                 const st = STATUTS_FACTURE[f.statut] || STATUTS_FACTURE.attente
                 return (
