@@ -63,15 +63,15 @@ export default function BonsCommande() {
     let entrees = 0
     for (const l of (lignes || [])) {
       if (l.produit_id && l.produits && l.produits.stock_gere) {
-        const { error } = await supabase.rpc('fn_appliquer_mouvement', {
+        const { error } = await supabase.rpc('fn_stock_mouvement', {
           p_produit_id: l.produit_id,
           p_type: 'entree',
-          p_delta: Math.abs(Number(l.quantite)),
+          p_quantite: Math.abs(Number(l.quantite)),
           p_motif: 'Réception commande fournisseur',
           p_ref: b.numero,
-          p_user: user?.id || null,
         })
         if (!error) entrees++
+        else toast.error(`${l.designation} : ${error.message}`)
       }
     }
 

@@ -133,13 +133,15 @@ export default function Utilisateurs() {
       <div className="card">
         <div className="card-header"><div className="card-title">Droits par rôle</div></div>
         <div className="card-body">
-          <div className="form-grid form-grid-3" style={{ gap:16 }}>
+          <div className="form-grid form-grid-3" style={{ gap:16, gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))' }}>
             {Object.entries(ROLES).map(([key, { label, color }]) => (
               <div key={key} style={{ border:'1px solid var(--border)', borderRadius:10, padding:14 }}>
                 <div style={{ fontWeight:600, color, marginBottom:10, fontSize:13 }}>{label}</div>
                 <div style={{ fontSize:12, color:'var(--gray)', lineHeight:1.9 }}>
                   {key === 'admin' && <><div>✓ Accès complet à tout</div><div>✓ Gestion des utilisateurs</div><div>✓ Paramètres du système</div><div>✓ Tableau de bord complet</div></>}
-                  {key === 'comptable' && <><div>✓ Créer factures & pro formas</div><div>✓ Gérer la base produits</div><div>✓ Voir le tableau de bord</div><div>✗ Gestion des utilisateurs</div></>}
+                  {key === 'comptable' && <><div>✓ Créer factures & pro formas</div><div>✓ Gérer la base produits</div><div>✓ Saisir le stock initial et les entrées / sorties</div><div>✓ Voir le tableau de bord</div><div>✗ Gestion des utilisateurs</div></>}
+                  {key === 'logistique' && <><div>✓ Saisir le stock initial</div><div>✓ Entrées / sorties de stock</div><div>✓ Bons de livraison</div><div>✗ Factures & finances</div></>}
+                  {key === 'admin' && <div>✓ Valider et verrouiller les stocks initiaux</div>}
                   {key === 'livreur' && <><div>✓ Bons de livraison</div><div>✓ Valider les livraisons</div><div>✓ Tableau de bord (limité)</div><div>✗ Factures & finances</div></>}
                 </div>
               </div>
@@ -174,6 +176,7 @@ export default function Utilisateurs() {
                   <select value={form.role} onChange={e => setForm(f=>({...f,role:e.target.value}))}>
                     <option value="comptable">Comptable / Secrétaire</option>
                     <option value="livreur">Livreur / Commercial</option>
+                    <option value="logistique">Responsable logistique</option>
                     <option value="admin">Administrateur</option>
                   </select>
                 </div>

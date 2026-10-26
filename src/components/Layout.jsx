@@ -18,7 +18,7 @@ const navItems = [
   { section: 'Achats & Stock' },
   { to: '/fournisseurs', label: 'Fournisseurs', icon: 'users', roles: ['admin','comptable'] },
   { to: '/bons-commande', label: 'Bons de commande', icon: 'file', roles: ['admin','comptable'] },
-  { to: '/stock', label: 'Stock', icon: 'package', roles: ['admin','comptable'] },
+  { to: '/stock', label: 'Stock', icon: 'package', roles: ['admin','comptable','logistique'] },
   { section: 'Communication' },
   { to: '/chat', label: 'Tchat', icon: 'chat', badge: 'chat' },
   { section: 'Ressources Humaines' },
