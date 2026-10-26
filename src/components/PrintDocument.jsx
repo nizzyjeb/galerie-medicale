@@ -1,5 +1,5 @@
 import LOGO_BASE64 from '../lib/logo.js'
-import { fmt, fmtDate } from '../lib/utils'
+import { fmt, fmtDate, montantEnLettres } from '../lib/utils'
 import { useEffect, useState } from 'react'
 
 export default function PrintDocument({ doc, type = 'facture', onClose }) {
@@ -441,11 +441,11 @@ function DocumentContent({
         <div className="row ttc"><span>TOTAL TTC</span><span>{fmt(ttc)}</span></div>
       </div>
 
-      {isProforma && (
-        <div className="estimation">
-          Estimation arrêtée à la somme de <b>{fmt(ttc)} TTC</b> (sous réserve de validation)
-        </div>
-      )}
+      <div className="estimation">
+        {isProforma
+          ? <>Estimation arrêtée à la somme de <b>{montantEnLettres(ttc)} TTC</b> ({fmt(ttc)} TTC), sous réserve de validation.</>
+          : <>Arrêtée la présente facture à la somme de <b>{montantEnLettres(ttc)} TTC</b> ({fmt(ttc)} TTC).</>}
+      </div>
 
       {/* CONDITIONS */}
       <div className="conditions">

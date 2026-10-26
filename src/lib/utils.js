@@ -53,3 +53,49 @@ export const STATUTS_BL = {
   partiel: { label: 'Partiel',    bg: '#eff6ff', color: '#1e40af' },
   complet: { label: 'Complet',    bg: '#f0fdf4', color: '#166534' },
 }
+
+// Montant en toutes lettres (français, règles traditionnelles) : 113193 → « cent treize mille cent quatre-vingt-treize »
+const UNITES = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix',
+  'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf']
+const DIZAINES = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante', 'quatre-vingt', 'quatre-vingt']
+
+const moinsDeCent = (n, final) => {
+  if (n < 20) return UNITES[n]
+  const d = Math.floor(n / 10), u = n % 10
+  if (d === 7 || d === 9) {
+    const reste = 10 + u
+    return DIZAINES[d] + (d === 7 && u === 1 ? ' et ' : '-') + UNITES[reste]
+  }
+  if (u === 0) return DIZAINES[d] + (d === 8 && final ? 's' : '')
+  if (u === 1 && d !== 8) return DIZAINES[d] + ' et un'
+  return DIZAINES[d] + '-' + UNITES[u]
+}
+
+const moinsDeMille = (n, final) => {
+  const c = Math.floor(n / 100), r = n % 100
+  let txt = ''
+  if (c > 0) txt = (c > 1 ? UNITES[c] + ' ' : '') + 'cent' + (c > 1 && r === 0 && final ? 's' : '')
+  if (r > 0) txt += (txt ? ' ' : '') + moinsDeCent(r, final)
+  return txt
+}
+
+export const nombreEnLettres = (valeur) => {
+  let n = Math.round(Math.abs(Number(valeur) || 0))
+  if (n === 0) return 'zéro'
+  const parts = []
+  const milliards = Math.floor(n / 1e9); n %= 1e9
+  const millions = Math.floor(n / 1e6); n %= 1e6
+  const milliers = Math.floor(n / 1e3); n %= 1e3
+  if (milliards) parts.push(moinsDeMille(milliards, true) + (milliards > 1 ? ' milliards' : ' milliard'))
+  if (millions) parts.push(moinsDeMille(millions, true) + (millions > 1 ? ' millions' : ' million'))
+  if (milliers) parts.push(milliers === 1 ? 'mille' : moinsDeMille(milliers, false) + ' mille')
+  if (n) parts.push(moinsDeMille(n, true))
+  return parts.join(' ')
+}
+
+export const montantEnLettres = (valeur) => {
+  const txt = nombreEnLettres(valeur)
+  const n = Math.round(Math.abs(Number(valeur) || 0))
+  const deFrancs = n >= 1e6 && n % 1e6 === 0 ? ' de francs CFA' : ' francs CFA'
+  return txt.charAt(0).toUpperCase() + txt.slice(1) + deFrancs
+}
