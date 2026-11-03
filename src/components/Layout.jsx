@@ -11,6 +11,7 @@ const navItems = [
   { to: '/factures', label: 'Factures', icon: 'file', roles: ['admin','comptable'] },
   { to: '/proforma', label: 'Pro Forma', icon: 'file-check', roles: ['admin','comptable'] },
   { to: '/caisse', label: 'Caisse', icon: 'cash', roles: ['admin','comptable'] },
+  { to: '/depenses', label: 'Dépenses & factures', icon: 'receipt', roles: ['admin','comptable'] },
   { section: 'Logistique' },
   { to: '/livraison', label: 'Bons de livraison', icon: 'truck' },
   { section: 'Catalogue' },
@@ -24,6 +25,8 @@ const navItems = [
   { section: 'Ressources Humaines' },
   { to: '/pointage', label: 'Pointage', icon: 'clock' },
   { to: '/presences', label: 'Présences', icon: 'user-check', roles: ['admin'] },
+  { to: '/employes', label: 'Employés', icon: 'id-card', roles: ['admin','comptable'] },
+  { to: '/paie', label: 'Paie', icon: 'wallet', roles: ['admin','comptable'] },
   { section: 'Administration' },
   { to: '/utilisateurs', label: 'Utilisateurs', icon: 'users', roles: ['admin'] },
   { to: '/journal', label: "Journal d'activité", icon: 'clock', roles: ['admin'] },
@@ -43,6 +46,9 @@ const Icon = ({ name }) => {
     cash: <><rect x="1" y="3" width="14" height="10" rx="1.5"/><circle cx="8" cy="8" r="2.5"/></>,
     'user-check': <><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2-5 5-5s5 2 5 5"/><path d="M11 7l1.5 1.5L15 6"/></>,
     chat: <><path d="M14 9c0 .5-.2 1-.6 1.4l-1 .9C12 11.7 11.5 12 11 12H6l-3 2.5V4c0-.6.4-1 1-1h9c.6 0 1 .4 1 1v5z"/></>,
+    receipt: <><path d="M3 1h10v14l-2-1.5L9 15l-2-1.5L5 15l-2-1.5z"/><line x1="5.5" y1="5" x2="10.5" y2="5"/><line x1="5.5" y1="8" x2="10.5" y2="8"/><line x1="5.5" y1="11" x2="8.5" y2="11"/></>,
+    'id-card': <><rect x="1" y="3" width="14" height="10" rx="1.5"/><circle cx="5.5" cy="7" r="1.7"/><path d="M3 11.5c0-1.4 1.1-2.3 2.5-2.3S8 10.1 8 11.5"/><line x1="9.5" y1="6.5" x2="13" y2="6.5"/><line x1="9.5" y1="9.5" x2="13" y2="9.5"/></>,
+    wallet: <><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3H12v2"/><rect x="2" y="5" width="12" height="8" rx="1.5"/><circle cx="11" cy="9" r="1"/></>,
   }
   return <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">{icons[name]}</svg>
 }

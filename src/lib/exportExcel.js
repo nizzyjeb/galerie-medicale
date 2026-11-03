@@ -235,3 +235,59 @@ export function exportPresencesExcel(profils, pointages, periode, vue) {
     downloadCSV(filename, allRows)
   }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT LIVRE DE PAIE (module Paie)
+// ═══════════════════════════════════════════════════════════════
+export function exportLivrePaieExcel(bulletins, periode) {
+  const filename = `Livre_de_paie_${periode}_${new Date().toISOString().split('T')[0]}.csv`
+  const header = [
+    'N° Bulletin', 'Matricule', 'Employé', 'Poste', 'Jours travaillés', 'Jours absence',
+    'Salaire de base', 'Heures sup.', 'Primes', 'BRUT',
+    'CNSS salarié', 'CNAMGS salarié', 'Base imposable', 'IRPP', 'TCS', 'Autres retenues', 'Total retenues',
+    'NET À PAYER', 'CNSS employeur', 'CNAMGS employeur', 'FNH', 'Charges patronales', 'COÛT TOTAL', 'Statut', 'Date paiement'
+  ]
+  const sum = (arr) => (arr || []).reduce((s, x) => s + (Number(x.montant) || 0), 0)
+  const rows = bulletins.map(b => [
+    b.numero, b.employe_matricule || '', b.employe_nom, b.employe_poste || '',
+    b.jours_travailles, b.jours_absence,
+    fmtNum(b.salaire_base_calcule), fmtNum(b.heures_sup_montant), fmtNum(sum(b.primes)), fmtNum(b.brut),
+    fmtNum(b.cnss_salarie), fmtNum(b.cnamgs_salarie), fmtNum(b.base_imposable), fmtNum(b.irpp), fmtNum(b.tcs), fmtNum(b.autres_retenues), fmtNum(b.total_retenues),
+    fmtNum(b.net_a_payer), fmtNum(b.cnss_employeur), fmtNum(b.cnamgs_employeur), fmtNum(b.fnh_employeur), fmtNum(b.total_charges_employeur), fmtNum(b.cout_total),
+    b.statut === 'paye' ? 'Payé' : b.statut === 'valide' ? 'Validé' : 'Brouillon', fmtDate(b.date_paiement)
+  ])
+  const tot = (k) => fmtNum(bulletins.reduce((s, b) => s + (Number(b[k]) || 0), 0))
+  rows.push([])
+  rows.push(['TOTAUX', '', '', '', '', '',
+    tot('salaire_base_calcule'), tot('heures_sup_montant'), fmtNum(bulletins.reduce((s, b) => s + sum(b.primes), 0)), tot('brut'),
+    tot('cnss_salarie'), tot('cnamgs_salarie'), tot('base_imposable'), tot('irpp'), tot('tcs'), tot('autres_retenues'), tot('total_retenues'),
+    tot('net_a_payer'), tot('cnss_employeur'), tot('cnamgs_employeur'), tot('fnh_employeur'), tot('total_charges_employeur'), tot('cout_total'), '', ''
+  ])
+  rows.push([`Livre de paie ${periode} — exporté le ${new Date().toLocaleDateString('fr-FR')} — Galerie Médicale SAJ Groupe`])
+  downloadCSV(filename, [header, ...rows])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT DÉPENSES & FACTURES FOURNISSEURS
+// ═══════════════════════════════════════════════════════════════
+export function exportDepensesExcel(depenses, libellePeriode = '') {
+  const filename = `Depenses_${libellePeriode || 'export'}_${new Date().toISOString().split('T')[0]}.csv`
+  const STATUTS = { brouillon: 'Brouillon', validee: 'Validée', payee: 'Payée', rejetee: 'Rejetée' }
+  const MODES = { especes: 'Espèces', virement: 'Virement', cheque: 'Chèque', mobile_money: 'Mobile Money', carte: 'Carte' }
+  const header = [
+    'N°', 'Type', 'Date', 'Fournisseur', 'Réf. facture fournisseur', 'Catégorie', 'Libellé',
+    'HT (FCFA)', 'TVA (FCFA)', 'CSS (FCFA)', 'TTC (FCFA)', 'Mode de paiement', 'Échéance', 'Date paiement', 'Statut', 'Saisi par', 'Justificatif'
+  ]
+  const rows = depenses.map(d => [
+    d.numero, d.type === 'facture_fournisseur' ? 'Facture fournisseur' : 'Dépense', fmtDate(d.date_depense),
+    d.fournisseur_nom || '', d.reference_fournisseur || '', d.categorie || '', d.libelle || '',
+    fmtNum(d.montant_ht), fmtNum(d.tva), fmtNum(d.css), fmtNum(d.montant_ttc),
+    MODES[d.mode_paiement] || d.mode_paiement || '', fmtDate(d.date_echeance), fmtDate(d.date_paiement),
+    STATUTS[d.statut] || d.statut, d.created_by_nom || '', d.justificatif_nom ? 'Oui' : 'Non'
+  ])
+  const tot = (k) => fmtNum(depenses.reduce((s, d) => s + (Number(d[k]) || 0), 0))
+  rows.push([])
+  rows.push(['TOTAUX', '', '', '', '', '', '', tot('montant_ht'), tot('tva'), tot('css'), tot('montant_ttc'), '', '', '', '', '', ''])
+  rows.push([`Exporté le ${new Date().toLocaleDateString('fr-FR')} — Galerie Médicale SAJ Groupe`])
+  downloadCSV(filename, [header, ...rows])
+}
