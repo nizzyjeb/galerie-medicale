@@ -18,7 +18,7 @@ function calcHeuresTravaillees(arrivee, depart) {
 }
 
 export default function Presences() {
-  const { isAdmin } = useAuth()
+  const { isManager: isAdmin } = useAuth()
   const [dateSelectionnee, setDateSelectionnee] = useState(new Date().toISOString().split('T')[0])
   const [tousProfils, setTousProfils] = useState([])
   const [pointages, setPointages] = useState([])

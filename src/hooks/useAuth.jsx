@@ -87,10 +87,13 @@ export function AuthProvider({ children }) {
   }
 
   const isAdmin = profile?.role === 'admin'
-  const isComptable = profile?.role === 'admin' || profile?.role === 'comptable'
+  const isGerant = profile?.role === 'gerant'
+  // isManager : admin OU gérant (accès étendu, sans les droits réservés à l'administrateur)
+  const isManager = isAdmin || isGerant
+  const isComptable = ['admin', 'gerant', 'comptable'].includes(profile?.role)
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signOut, isAdmin, isComptable }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signOut, isAdmin, isGerant, isManager, isComptable }}>
       {children}
     </AuthContext.Provider>
   )

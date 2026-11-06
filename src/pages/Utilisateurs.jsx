@@ -175,6 +175,7 @@ export default function Utilisateurs() {
                   <label>Rôle *</label>
                   <select value={form.role} onChange={e => setForm(f=>({...f,role:e.target.value}))}>
                     <option value="comptable">Comptable / Secrétaire</option>
+                    <option value="gerant">Gérant (accès étendu)</option>
                     <option value="livreur">Livreur / Commercial</option>
                     <option value="logistique">Responsable logistique</option>
                     <option value="admin">Administrateur</option>

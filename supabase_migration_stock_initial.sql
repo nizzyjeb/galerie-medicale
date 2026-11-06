@@ -8,7 +8,7 @@ begin
   end loop;
 end $$;
 
-alter table public.profiles add constraint profiles_role_check check (role in ('admin','comptable','livreur','logistique'));
+alter table public.profiles add constraint profiles_role_check check (role in ('admin','gerant','comptable','livreur','logistique'));
 
 alter table public.produits add column if not exists stock_gere boolean default false;
 alter table public.produits add column if not exists stock_actuel numeric(12,2) default 0;
@@ -138,7 +138,7 @@ declare
   v_delta numeric;
   v_nouveau numeric;
 begin
-  if public.gm_role() is null or public.gm_role() not in ('admin','comptable','logistique') then
+  if public.gm_role() is null or public.gm_role() not in ('admin','gerant','comptable','logistique') then
     raise exception 'Accès refusé : saisie réservée à l''administrateur, au comptable / secrétaire et au responsable logistique.';
   end if;
   if p_quantite is null or p_quantite < 0 then
@@ -231,7 +231,7 @@ declare
   v_role text := public.gm_role();
   v_delta numeric;
 begin
-  if v_role is null or v_role not in ('admin','comptable','logistique') then
+  if v_role is null or v_role not in ('admin','gerant','comptable','logistique') then
     raise exception 'Accès refusé.';
   end if;
   if p_type not in ('entree','sortie','ajustement') then
@@ -290,7 +290,7 @@ as $$
 declare
   v_role text := public.gm_role();
 begin
-  if v_role is null or v_role not in ('admin','comptable','logistique') then
+  if v_role is null or v_role not in ('admin','gerant','comptable','logistique') then
     raise exception 'Accès refusé.';
   end if;
   if p_gere is not null and v_role <> 'admin' then

@@ -21,7 +21,7 @@ const vide = {
 const num = (v) => v === '' || v == null ? 0 : Number(v)
 
 export default function Employes() {
-  const { isAdmin } = useAuth()
+  const { isManager: isAdmin } = useAuth()
   const [items, setItems] = useState([])
   const [profils, setProfils] = useState([])
   const [loading, setLoading] = useState(true)

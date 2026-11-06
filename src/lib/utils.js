@@ -42,6 +42,7 @@ export const calcTotals = (lignes, remisePct = 0) => {
 
 export const ROLES = {
   admin: { label: 'Administrateur', color: '#1A9E8F' },
+  gerant: { label: 'Gérant', color: '#7C3AED' },
   comptable: { label: 'Comptable / Secrétaire', color: '#E67E22' },
   livreur: { label: 'Livreur / Commercial', color: '#6D6D6D' },
   logistique: { label: 'Responsable logistique', color: '#2563EB' },

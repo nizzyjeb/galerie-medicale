@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import PrintDocument from '../components/PrintDocument'
 import ContextMenu from '../components/ContextMenu'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -12,7 +13,7 @@ import SearchBox, { correspond } from '../components/SearchBox'
 import { TraceCell, HistoriqueModal, useProfils } from '../components/Tracabilite'
 
 export default function Factures() {
-  const { user, profile, isAdmin } = useAuth()
+  const { user, profile, isAdmin, isManager } = useAuth()
   const [factures, setFactures] = useState([])
   const [filter, setFilter] = useState('all')
   const [recherche, setRecherche] = useState('')
@@ -81,7 +82,7 @@ export default function Factures() {
         { icon: '✏️', label: 'Modifier', action: () => setEditDoc(f) },
         { icon: '🕘', label: 'Historique (qui / quand)', action: () => setHistDoc(f) },
         // ★ NOUVEAU : Option Valider dans le menu contextuel (admin + non validée)
-        ...(isAdmin && !f.valide ? [
+        ...(isManager && !f.valide ? [
           'divider',
           { icon: '✓', label: 'Valider définitivement', action: () => validerFacture(f.id, f.numero) }
         ] : []),
@@ -130,13 +131,13 @@ export default function Factures() {
       </div>
 
       {/* ★ NOUVEAU : Bandeau d'info pour le comptable */}
-      {!isAdmin && profile?.role === 'comptable' && (
+      {profile?.role === 'comptable' && (
         <div style={{
           padding: '10px 14px', marginBottom: 16, borderRadius: 8,
           background: '#fff7ed', border: '1px solid #fed7aa', color: '#9a3412',
           fontSize: 13
         }}>
-          ℹ️ Les factures que vous créez doivent être validées par un administrateur pour devenir définitives.
+          ℹ️ Les factures que vous créez doivent être validées par un administrateur ou le gérant pour devenir définitives.
         </div>
       )}
 
@@ -175,12 +176,15 @@ export default function Factures() {
                     <td>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         <button className="btn btn-ghost btn-sm" onClick={() => openPreview(f)}>👁 Aperçu</button>
+                        {f.valide && f.statut !== 'payee' && (
+                          <Link className="btn btn-ghost btn-sm" to={`/recettes?facture=${f.id}`} title="Enregistrer un encaissement sur cette facture">💰 Encaisser</Link>
+                        )}
                         {/* Modifier : admin toujours, comptable seulement si non validée */}
-                        {(isAdmin || !f.valide) && (
+                        {(isManager || !f.valide) && (
                           <button className="btn btn-ghost btn-sm" onClick={() => setEditDoc(f)}>✏️ Modifier</button>
                         )}
                         {/* ★ NOUVEAU : Bouton Valider - admin uniquement, facture non validée */}
-                        {isAdmin && !f.valide && (
+                        {isManager && !f.valide && (
                           <button
                             className="btn btn-sm"
                             style={{ background: '#16a34a', color: 'white', border: 'none', fontWeight: 600 }}

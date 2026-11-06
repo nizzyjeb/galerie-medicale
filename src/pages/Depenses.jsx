@@ -32,7 +32,7 @@ const calcMontants = (ht, exonere, tauxTva, tauxCss) => {
 }
 
 export default function Depenses() {
-  const { user, profile, isAdmin } = useAuth()
+  const { user, profile, isAdmin, isManager } = useAuth()
   const [items, setItems] = useState([])
   const [fournisseurs, setFournisseurs] = useState([])
   const [categories, setCategories] = useState([])
@@ -244,7 +244,7 @@ export default function Depenses() {
   }, [items])
 
   const libellePeriode = toutesPeriodes ? 'Toutes périodes' : (() => { const [y, m] = periode.split('-'); const t = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }); return t.charAt(0).toUpperCase() + t.slice(1) })()
-  const peutModifier = (d) => isAdmin || (d.statut === 'brouillon')
+  const peutModifier = (d) => isManager || (d.statut === 'brouillon')
 
   return (
     <div>
@@ -285,7 +285,7 @@ export default function Depenses() {
         </select>
         <button className="btn btn-ghost" disabled={!filtres.length} onClick={() => exportDepensesExcel(filtres, toutesPeriodes ? 'toutes' : periode)}>⬇ Excel</button>
         {isAdmin && <button className="btn btn-ghost" onClick={() => setModalCategories(true)}>Catégories</button>}
-        {isAdmin && filtres.some(d => d.statut === 'brouillon') && <button className="btn btn-success" onClick={validerToutes}>✓ Valider les {filtres.filter(d => d.statut === 'brouillon').length} en attente</button>}
+        {isManager && filtres.some(d => d.statut === 'brouillon') && <button className="btn btn-success" onClick={validerToutes}>✓ Valider les {filtres.filter(d => d.statut === 'brouillon').length} en attente</button>}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: parCategorie.length ? '1fr 260px' : '1fr', gap: 16, alignItems: 'start' }}>
@@ -340,12 +340,12 @@ export default function Depenses() {
                         </td>
                         <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                           {peutModifier(d) && <><button className="btn btn-ghost btn-sm" onClick={() => ouvrirEdition(d)}>Modifier</button>{' '}</>}
-                          {isAdmin && d.statut === 'brouillon' && <>
+                          {isManager && d.statut === 'brouillon' && <>
                             <button className="btn btn-success btn-sm" onClick={() => changerStatut(d, 'validee')}>Valider</button>{' '}
                             <button className="btn btn-danger btn-sm" onClick={() => { setRejet(d); setMotifRejet('') }}>Rejeter</button>{' '}
                           </>}
-                          {isAdmin && d.statut === 'validee' && <><button className="btn btn-success btn-sm" onClick={() => changerStatut(d, 'payee')}>Payée</button>{' '}</>}
-                          {isAdmin && (d.statut === 'payee' || d.statut === 'rejetee') && <><button className="btn btn-ghost btn-sm" title="Remettre en attente" onClick={() => changerStatut(d, 'brouillon', { motif_rejet: null })}>↩</button>{' '}</>}
+                          {isManager && d.statut === 'validee' && <><button className="btn btn-success btn-sm" onClick={() => changerStatut(d, 'payee')}>Payée</button>{' '}</>}
+                          {isManager && (d.statut === 'payee' || d.statut === 'rejetee') && <><button className="btn btn-ghost btn-sm" title="Remettre en attente" onClick={() => changerStatut(d, 'brouillon', { motif_rejet: null })}>↩</button>{' '}</>}
                           {(isAdmin || (d.statut === 'brouillon' && d.created_by === user?.id)) && <button className="btn btn-danger btn-sm" onClick={() => supprimer(d)}>✕</button>}
                         </td>
                       </tr>

@@ -26,7 +26,7 @@ alter table public.document_historique enable row level security;
 drop policy if exists "historique_lecture" on public.document_historique;
 create policy "historique_lecture" on public.document_historique
   for select to authenticated
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','comptable')));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','gerant','comptable')));
 
 create or replace function public.gm_nom_utilisateur(uid uuid)
 returns text

@@ -22,6 +22,51 @@ const DEFAULT_PARAMS = {
   mention_facture: 'Toute facture non contestée dans 8 jours est réputée acceptée.',
 }
 
+function CodeCaisseParametre() {
+  const [ancien, setAncien] = useState('')
+  const [nouveau, setNouveau] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [envoi, setEnvoi] = useState(false)
+
+  const enregistrer = async () => {
+    if (!ancien || !nouveau) { toast.error('Renseignez le code actuel et le nouveau code'); return }
+    if (nouveau !== confirm) { toast.error('La confirmation ne correspond pas au nouveau code'); return }
+    if (nouveau.length < 4 || nouveau.length > 12) { toast.error('Le code doit comporter entre 4 et 12 caractères'); return }
+    setEnvoi(true)
+    const { error } = await supabase.rpc('fn_caisse_definir_code', { p_ancien: ancien, p_nouveau: nouveau })
+    setEnvoi(false)
+    if (error) { toast.error(error.message); return }
+    toast.success('Code de caisse modifié')
+    setAncien(''); setNouveau(''); setConfirm('')
+  }
+
+  return (
+    <div>
+      <div style={{ fontSize:13, fontWeight:600, color:'var(--teal)', marginBottom:16 }}>Code d'ouverture et de fermeture de la caisse</div>
+      <div className="alert alert-info" style={{ fontSize:12, marginBottom:16 }}>
+        Ce code est demandé à chaque ouverture et clôture de la caisse (et pour rouvrir une journée clôturée). Il est stocké chiffré : personne, pas même l'administrateur, ne peut le relire. Communiquez le nouveau code aux personnes habilitées.
+      </div>
+      <div className="form-grid form-grid-3" style={{ gap:16 }}>
+        <div className="form-group">
+          <label>Code actuel</label>
+          <input type="password" autoComplete="off" value={ancien} onChange={e => setAncien(e.target.value.trim())} />
+        </div>
+        <div className="form-group">
+          <label>Nouveau code</label>
+          <input type="password" autoComplete="new-password" value={nouveau} onChange={e => setNouveau(e.target.value.trim())} placeholder="4 à 12 caractères" />
+        </div>
+        <div className="form-group">
+          <label>Confirmer le nouveau code</label>
+          <input type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value.trim())} />
+        </div>
+      </div>
+      <button className="btn btn-primary" style={{ marginTop:16 }} onClick={enregistrer} disabled={envoi}>
+        {envoi ? 'Enregistrement…' : '🔐 Modifier le code de caisse'}
+      </button>
+    </div>
+  )
+}
+
 export default function Parametres() {
   const [params, setParams] = useState(DEFAULT_PARAMS)
   const [loading, setLoading] = useState(true)
@@ -75,6 +120,7 @@ export default function Parametres() {
     { id: 'bancaire', label: '🏦 Bancaire', icon: '🏦' },
     { id: 'fiscalite', label: '💰 Fiscalité', icon: '💰' },
     { id: 'documents', label: '📄 Documents', icon: '📄' },
+    { id: 'caisse', label: '🔐 Code caisse', icon: '🔐' },
   ]
 
   if (loading) return <div style={{ textAlign:'center', padding:60, color:'var(--gray)' }}>Chargement...</div>
@@ -239,6 +285,9 @@ export default function Parametres() {
                 </div>
               </div>
             )}
+
+            {/* CODE CAISSE */}
+            {activeTab === 'caisse' && <CodeCaisseParametre />}
 
             {/* DOCUMENTS */}
             {activeTab === 'documents' && (

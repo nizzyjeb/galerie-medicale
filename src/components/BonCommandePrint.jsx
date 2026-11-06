@@ -4,10 +4,21 @@ const fmt = (n) => (Number(n) || 0).toLocaleString('fr-FR')
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—'
 
 const STATUTS = {
-  brouillon: 'Brouillon', envoye: 'Envoyé au fournisseur', recu: 'Reçu', annule: 'Annulé',
+  brouillon: 'Brouillon', envoye: 'Envoyé au fournisseur', confirme: 'Confirmé par le fournisseur',
+  expedie: 'Expédié', arrive: 'Arrivé au port / aéroport', dedouane: 'Dédouané', recu: 'Reçu', annule: 'Annulé',
 }
 
 export function imprimerBonCommande(bon, lignes) {
+  const html = htmlBonCommande(bon, lignes, true)
+  const w = window.open('', '_blank')
+  if (!w) return
+  w.document.open()
+  w.document.write(html)
+  w.document.close()
+}
+
+// Renvoie le bon de commande au format HTML autonome (utilisé aussi pour le dossier ZIP).
+export function htmlBonCommande(bon, lignes, autoPrint = false) {
   const lignesHtml = (lignes || []).map((l, i) => `
     <tr>
       <td style="text-align:center">${i + 1}</td>
@@ -109,14 +120,9 @@ export function imprimerBonCommande(bon, lignes) {
 
   <div class="foot">Galerie Médicale — SAJ Groupe · Libreville, Gabon · Document généré le ${new Date().toLocaleDateString('fr-FR')}</div>
 </div>
-<script>window.onload = function(){ window.print(); }</script>
+${autoPrint ? '<script>window.onload = function(){ window.print(); }</script>' : ''}
 </body></html>`
-
-  const w = window.open('', '_blank')
-  if (!w) return
-  w.document.open()
-  w.document.write(html)
-  w.document.close()
+  return html
 }
 
 function escapeHtml(s) {

@@ -27,7 +27,7 @@ const etatInitial = (p) => p.stock_initial_valide ? 'valide' : p.stock_initial_s
 
 export default function Stock() {
   const { user, isAdmin, profile } = useAuth()
-  const peutSaisir = ['admin', 'comptable', 'logistique'].includes(profile?.role)
+  const peutSaisir = ['admin', 'gerant', 'comptable', 'logistique'].includes(profile?.role)
   const profils = useProfils()
   const nom = (id) => (id ? (profils[id] || '—') : '—')
 

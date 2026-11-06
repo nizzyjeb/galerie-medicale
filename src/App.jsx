@@ -20,13 +20,14 @@ import Journal from './pages/Journal'
 import Employes from './pages/Employes'
 import Paie from './pages/Paie'
 import Depenses from './pages/Depenses'
+import Recettes from './pages/Recettes'
 
 function ProtectedRoute({ children, adminOnly = false, comptableOnly = false, roles = null }) {
   const { user, profile, loading } = useAuth()
   if (loading) return <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'var(--gray)' }}>Chargement...</div>
   if (!user) return <Navigate to="/login" replace />
   if (adminOnly && profile?.role !== 'admin') return <Navigate to="/" replace />
-  if (comptableOnly && !['admin','comptable'].includes(profile?.role)) return <Navigate to="/" replace />
+  if (comptableOnly && !['admin','gerant','comptable'].includes(profile?.role)) return <Navigate to="/" replace />
   if (roles && !roles.includes(profile?.role)) return <Navigate to="/" replace />
   return children
 }
@@ -45,7 +46,8 @@ export default function App() {
         <Route path="livraison" element={<BonsLivraison />} />
         <Route path="pointage" element={<Pointage />} />
         <Route path="caisse" element={<ProtectedRoute comptableOnly><Caisse /></ProtectedRoute>} />
-        <Route path="presences" element={<ProtectedRoute adminOnly><Presences /></ProtectedRoute>} />
+        <Route path="recettes" element={<ProtectedRoute comptableOnly><Recettes /></ProtectedRoute>} />
+        <Route path="presences" element={<ProtectedRoute roles={['admin', 'gerant']}><Presences /></ProtectedRoute>} />
         <Route path="employes" element={<ProtectedRoute comptableOnly><Employes /></ProtectedRoute>} />
         <Route path="paie" element={<ProtectedRoute comptableOnly><Paie /></ProtectedRoute>} />
         <Route path="depenses" element={<ProtectedRoute comptableOnly><Depenses /></ProtectedRoute>} />
@@ -53,7 +55,7 @@ export default function App() {
         <Route path="produits" element={<ProtectedRoute comptableOnly><Produits /></ProtectedRoute>} />
         <Route path="fournisseurs" element={<ProtectedRoute comptableOnly><Fournisseurs /></ProtectedRoute>} />
         <Route path="bons-commande" element={<ProtectedRoute comptableOnly><BonsCommande /></ProtectedRoute>} />
-        <Route path="stock" element={<ProtectedRoute roles={['admin', 'comptable', 'logistique']}><Stock /></ProtectedRoute>} />
+        <Route path="stock" element={<ProtectedRoute roles={['admin', 'gerant', 'comptable', 'logistique']}><Stock /></ProtectedRoute>} />
         <Route path="utilisateurs" element={<ProtectedRoute adminOnly><Utilisateurs /></ProtectedRoute>} />
         <Route path="journal" element={<ProtectedRoute adminOnly><Journal /></ProtectedRoute>} />
         <Route path="parametres" element={<ProtectedRoute adminOnly><Parametres /></ProtectedRoute>} />
