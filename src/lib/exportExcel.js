@@ -242,28 +242,32 @@ export function exportPresencesExcel(profils, pointages, periode, vue) {
 export function exportLivrePaieExcel(bulletins, periode) {
   const filename = `Livre_de_paie_${periode}_${new Date().toISOString().split('T')[0]}.csv`
   const header = [
-    'N° Bulletin', 'Matricule', 'Employé', 'Poste', 'Jours travaillés', 'Jours absence',
-    'Salaire de base', 'Heures sup.', 'Primes', 'BRUT',
-    'CNSS salarié', 'CNAMGS salarié', 'Base imposable', 'IRPP', 'TCS', 'Autres retenues', 'Total retenues',
-    'NET À PAYER', 'CNSS employeur', 'CNAMGS employeur', 'FNH', 'Charges patronales', 'COÛT TOTAL', 'Statut', 'Date paiement'
+    'N° Bulletin', 'Matricule', 'Employé', 'Emploi', 'Jours', 'Salaire de base', 'Ancienneté', 'Primes soumises', 'BRUT CNSS',
+    'CNSS salarié', 'CNAMGS salarié', 'Base TCS', 'TCS', 'Base IRPP', 'IRPP', 'Salaire net', 'Indemnités non soumises',
+    'Autres retenues', 'Reprise arrondi', 'Arrondi', 'NET À PAYER', 'Mode de paiement',
+    'CNSS employeur', 'CNAMGS employeur', 'FNH', 'COÛT TOTAL', 'Statut', 'Date paiement'
   ]
-  const sum = (arr) => (arr || []).reduce((s, x) => s + (Number(x.montant) || 0), 0)
+  const ligne = (b, code) => (b.lignes || []).filter(l => l.code === code).reduce((s, l) => s + (Number(l.gain) || 0), 0)
+  const primesSoumises = (b) => (b.lignes || []).filter(l => l.type === 'S' && !['100', '200'].includes(l.code)).reduce((s, l) => s + (Number(l.gain) || 0), 0)
+  const MODES = { especes: 'Espèces', virement: 'Virement', cheque: 'Chèque', mobile_money: 'Mobile Money' }
   const rows = bulletins.map(b => [
-    b.numero, b.employe_matricule || '', b.employe_nom, b.employe_poste || '',
-    b.jours_travailles, b.jours_absence,
-    fmtNum(b.salaire_base_calcule), fmtNum(b.heures_sup_montant), fmtNum(sum(b.primes)), fmtNum(b.brut),
-    fmtNum(b.cnss_salarie), fmtNum(b.cnamgs_salarie), fmtNum(b.base_imposable), fmtNum(b.irpp), fmtNum(b.tcs), fmtNum(b.autres_retenues), fmtNum(b.total_retenues),
-    fmtNum(b.net_a_payer), fmtNum(b.cnss_employeur), fmtNum(b.cnamgs_employeur), fmtNum(b.fnh_employeur), fmtNum(b.total_charges_employeur), fmtNum(b.cout_total),
+    b.numero, b.employe_matricule || '', b.employe_nom, b.employe_poste || '', b.jours_travailles,
+    fmtNum(b.salaire_base_calcule), fmtNum(ligne(b, '200')), fmtNum(primesSoumises(b)), fmtNum(b.brut_cotisable),
+    fmtNum(b.cnss_salarie), fmtNum(b.cnamgs_salarie), fmtNum(b.base_tcs), fmtNum(b.tcs), fmtNum(b.base_irpp), fmtNum(b.irpp),
+    fmtNum(b.salaire_net_imposable), fmtNum(b.indemnites_non_soumises), fmtNum(b.autres_retenues), fmtNum(b.reprise_arrondi), fmtNum(b.arrondi),
+    fmtNum(b.net_a_payer), MODES[b.mode_paiement] || b.mode_paiement || '',
+    fmtNum(b.cnss_employeur), fmtNum(b.cnamgs_employeur), fmtNum(b.fnh_employeur), fmtNum(b.cout_total),
     b.statut === 'paye' ? 'Payé' : b.statut === 'valide' ? 'Validé' : 'Brouillon', fmtDate(b.date_paiement)
   ])
   const tot = (k) => fmtNum(bulletins.reduce((s, b) => s + (Number(b[k]) || 0), 0))
   rows.push([])
-  rows.push(['TOTAUX', '', '', '', '', '',
-    tot('salaire_base_calcule'), tot('heures_sup_montant'), fmtNum(bulletins.reduce((s, b) => s + sum(b.primes), 0)), tot('brut'),
-    tot('cnss_salarie'), tot('cnamgs_salarie'), tot('base_imposable'), tot('irpp'), tot('tcs'), tot('autres_retenues'), tot('total_retenues'),
-    tot('net_a_payer'), tot('cnss_employeur'), tot('cnamgs_employeur'), tot('fnh_employeur'), tot('total_charges_employeur'), tot('cout_total'), '', ''
+  rows.push(['TOTAUX', '', '', '', '',
+    tot('salaire_base_calcule'), fmtNum(bulletins.reduce((s, b) => s + ligne(b, '200'), 0)), fmtNum(bulletins.reduce((s, b) => s + primesSoumises(b), 0)), tot('brut_cotisable'),
+    tot('cnss_salarie'), tot('cnamgs_salarie'), tot('base_tcs'), tot('tcs'), tot('base_irpp'), tot('irpp'),
+    tot('salaire_net_imposable'), tot('indemnites_non_soumises'), tot('autres_retenues'), tot('reprise_arrondi'), tot('arrondi'),
+    tot('net_a_payer'), '', tot('cnss_employeur'), tot('cnamgs_employeur'), tot('fnh_employeur'), tot('cout_total'), '', ''
   ])
-  rows.push([`Livre de paie ${periode} — exporté le ${new Date().toLocaleDateString('fr-FR')} — Galerie Médicale SAJ Groupe`])
+  rows.push([`Livre de paie ${periode} — exporté le ${new Date().toLocaleDateString('fr-FR')} — SAJ Groupe`])
   downloadCSV(filename, [header, ...rows])
 }
 
