@@ -9,13 +9,14 @@ export default function PrintDocument({ doc, type = 'facture', onClose }) {
   }, [])
 
   const lignes = doc.lignes || []
-  const sousTotal = doc.sous_total_ht || 0
+  const r0 = (v) => Math.round((Number(v) || 0) + Number.EPSILON)
+  const sousTotal = r0(doc.sous_total_ht)
   const remisePct = doc.remise_pct || 0
-  const remise = doc.montant_remise || 0
-  const base = doc.base_ht || 0
-  const tva = doc.tva || 0
-  const css = doc.css || 0
-  const ttc = doc.total_ttc || 0
+  const remise = r0(doc.montant_remise)
+  const base = sousTotal - remise
+  const tva = r0(doc.tva)
+  const css = r0(doc.css)
+  const ttc = base + tva + css
   const isProforma = type === 'proforma'
   const titre = isProforma ? 'FACTURE PRO FORMA' : 'FACTURE'
   const numero = doc.numero || ''
