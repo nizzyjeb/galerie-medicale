@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { fmt, calcTotals } from '../lib/utils'
 import toast from 'react-hot-toast'
+import ClientPicker from './ClientPicker'
 
 export default function EditFactureModal({ doc, onClose, onSaved }) {
   const [produits, setProduits] = useState([])
@@ -131,7 +132,11 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
           <div className="form-grid form-grid-2 mb-4">
             <div className="form-group">
               <label>Nom / Raison sociale *</label>
-              <input value={form.client_nom} onChange={e => setForm(f => ({ ...f, client_nom: e.target.value }))} />
+              <ClientPicker
+                value={form.client_nom}
+                onChange={v => setForm(f => ({ ...f, client_nom: v }))}
+                onSelect={c => setForm(f => ({ ...f, client_nom: c.nom, client_adresse: c.adresse || '', client_nif: c.nif || '' }))}
+              />
             </div>
             <div className="form-group">
               <label>NIF client</label>

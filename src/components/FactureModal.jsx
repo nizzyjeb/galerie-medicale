@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { fmt, today, addDays, calcTotals } from '../lib/utils'
 import toast from 'react-hot-toast'
 import { useAuth } from '../hooks/useAuth'
+import ClientPicker from './ClientPicker'
 
 export default function FactureModal({ type = 'facture', onClose, onSaved }) {
   const { user, profile, isAdmin, isManager } = useAuth()
@@ -180,7 +181,11 @@ export default function FactureModal({ type = 'facture', onClose, onSaved }) {
           <div className="form-grid form-grid-2 mb-4">
             <div className="form-group">
               <label>Nom / Raison sociale *</label>
-              <input value={form.client_nom} onChange={e => setForm(f=>({...f,client_nom:e.target.value}))} placeholder="CHU de Libreville" />
+              <ClientPicker
+                value={form.client_nom}
+                onChange={v => setForm(f => ({ ...f, client_nom: v }))}
+                onSelect={c => setForm(f => ({ ...f, client_nom: c.nom, client_adresse: c.adresse || '', client_nif: c.nif || '' }))}
+              />
             </div>
             <div className="form-group">
               <label>NIF client</label>
