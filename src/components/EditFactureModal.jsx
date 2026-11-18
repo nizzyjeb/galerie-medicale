@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { fmt, calcTotals } from '../lib/utils'
+import { fmt, calcTotals, addDays } from '../lib/utils'
 import toast from 'react-hot-toast'
 import ClientPicker from './ClientPicker'
 
@@ -14,6 +14,7 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
     objet: doc.objet || '',
     vendeur: doc.vendeur || '',
     date_emission: doc.date_emission || '',
+    date_echeance: doc.date_echeance || '',
     remise_pct: doc.remise_pct || 0,
   })
   const [lignes, setLignes] = useState([])
@@ -73,6 +74,7 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
       objet: form.objet,
       vendeur: form.vendeur.trim() || null,
       date_emission: form.date_emission,
+      date_echeance: form.date_echeance || (form.date_emission ? addDays(form.date_emission, 30) : null),
       remise_pct: parseFloat(form.remise_pct) || 0,
       sous_total_ht: totaux.sousTotal,
       montant_remise: totaux.remise,
@@ -148,7 +150,13 @@ export default function EditFactureModal({ doc, onClose, onSaved }) {
             </div>
             <div className="form-group">
               <label>Date d'émission</label>
-              <input type="date" value={form.date_emission} onChange={e => setForm(f => ({ ...f, date_emission: e.target.value }))} />
+              <input type="date" value={form.date_emission}
+                onChange={e => setForm(f => ({ ...f, date_emission: e.target.value, date_echeance: e.target.value ? addDays(e.target.value, 30) : f.date_echeance }))} />
+            </div>
+            <div className="form-group">
+              <label>Date d'échéance</label>
+              <input type="date" value={form.date_echeance} min={form.date_emission || undefined}
+                onChange={e => setForm(f => ({ ...f, date_echeance: e.target.value }))} />
             </div>
           </div>
           <div className="form-grid form-grid-2 mb-4">
